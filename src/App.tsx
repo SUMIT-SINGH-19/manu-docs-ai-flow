@@ -8,6 +8,9 @@ import Index from "./pages/Index";
 import Upload from "./pages/Upload";
 import Dashboard from "./pages/Dashboard";
 import AIExtraction from "./pages/AIExtraction";
+import CategorySelection from "./pages/CategorySelection";
+import ProductListing from "./pages/ProductListing";
+import ProductDocuments from "./pages/ProductDocuments";
 import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
 
@@ -23,6 +26,9 @@ const App = () => (
           <Navigation />
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/categories" element={<CategorySelection />} />
+            <Route path="/products/:categoryId" element={<ProductListing />} />
+            <Route path="/product/:categoryId/:productId" element={<ProductDocuments />} />
             <Route path="/upload" element={<Upload />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/extraction" element={<AIExtraction />} />

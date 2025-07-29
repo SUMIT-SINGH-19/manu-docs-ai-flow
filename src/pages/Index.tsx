@@ -68,15 +68,15 @@ const Index = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Button asChild variant="ai" size="lg" className="text-lg px-8 py-6">
-                <Link to="/upload">
+                <Link to="/categories">
                   <Upload className="w-5 h-5 mr-2" />
-                  Start Upload
+                  Start with Categories
                 </Link>
               </Button>
               <Button asChild variant="surface" size="lg" className="text-lg px-8 py-6">
-                <Link to="/dashboard">
+                <Link to="/upload">
                   <FileText className="w-5 h-5 mr-2" />
-                  View Dashboard
+                  Quick Upload
                 </Link>
               </Button>
             </div>

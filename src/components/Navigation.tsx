@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import ProfilePanel from "@/components/ProfilePanel";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -25,9 +26,11 @@ import {
 
 export const Navigation = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const location = useLocation();
 
   const navItems = [
+    { to: "/categories", label: "Categories", icon: Upload },
     { to: "/upload", label: "Upload", icon: Upload },
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/help", label: "Help", icon: HelpCircle },
@@ -98,7 +101,7 @@ export const Navigation = () => {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsProfileOpen(true)}>
                   <User className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
@@ -158,6 +161,9 @@ export const Navigation = () => {
           </div>
         )}
       </div>
+      
+      {/* Profile Panel */}
+      <ProfilePanel isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
     </nav>
   );
 };

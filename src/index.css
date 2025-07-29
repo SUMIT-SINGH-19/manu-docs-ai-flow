@@ -9,32 +9,49 @@ All colors MUST be HSL.
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 240 10% 3.9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 240 10% 3.9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 240 10% 3.9%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 79 100% 45%;
+    --primary-foreground: 240 10% 3.9%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 79 100% 45%;
+
+    /* Custom ManuDocs design tokens */
+    --ai-accent: 79 100% 45%;
+    --ai-accent-foreground: 240 10% 3.9%;
+    --surface: 0 0% 98%;
+    --surface-elevated: 0 0% 100%;
+    --text-primary: 240 10% 3.9%;
+    --text-secondary: 240 3.8% 46.1%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(79 100% 45%), hsl(79 100% 55%));
+    --gradient-surface: linear-gradient(to bottom, hsl(0 0% 100%), hsl(240 4.8% 98%));
+    
+    /* Shadows */
+    --shadow-soft: 0 2px 8px -2px hsl(240 10% 3.9% / 0.04);
+    --shadow-medium: 0 4px 16px -4px hsl(240 10% 3.9% / 0.08);
+    --shadow-strong: 0 8px 32px -8px hsl(240 10% 3.9% / 0.12);
 
     --radius: 0.5rem;
 
@@ -100,6 +117,6 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-inter;
   }
 }

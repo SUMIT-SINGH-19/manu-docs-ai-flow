@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import ProfilePanel from "@/components/ProfilePanel";
+import { CategoriesDropdown } from "@/components/CategoriesDropdown";
+import { UploadModal } from "@/components/UploadModal";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -27,11 +29,10 @@ import {
 export const Navigation = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const location = useLocation();
 
   const navItems = [
-    { to: "/categories", label: "Categories", icon: Upload },
-    { to: "/upload", label: "Upload", icon: Upload },
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/help", label: "Help", icon: HelpCircle },
   ];
@@ -54,6 +55,15 @@ export const Navigation = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
+            <CategoriesDropdown />
+            <Button 
+              variant="ghost" 
+              className="flex items-center space-x-2"
+              onClick={() => setIsUploadModalOpen(true)}
+            >
+              <Upload className="w-4 h-4" />
+              <span>Upload</span>
+            </Button>
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -133,6 +143,20 @@ export const Navigation = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 bg-surface border-t border-border">
+              <div className="p-3">
+                <CategoriesDropdown />
+              </div>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start"
+                onClick={() => {
+                  setIsUploadModalOpen(true);
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Upload
+              </Button>
               {navItems.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -164,6 +188,9 @@ export const Navigation = () => {
       
       {/* Profile Panel */}
       <ProfilePanel isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
+      
+      {/* Upload Modal */}
+      <UploadModal isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} />
     </nav>
   );
 };

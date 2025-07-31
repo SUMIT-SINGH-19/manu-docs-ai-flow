@@ -58,7 +58,7 @@ const Index = () => {
             <h1 className="text-4xl md:text-6xl font-bold text-text-primary mb-6 leading-tight">
               AI-Powered Export
               <span className="bg-gradient-primary bg-clip-text text-transparent"> Documentation</span>
-              <br />for Indian Exporters
+              <br />for Exporters - Importers Worldwide
             </h1>
             
             <p className="text-xl text-text-secondary mb-8 max-w-2xl mx-auto leading-relaxed">
@@ -109,7 +109,7 @@ const Index = () => {
                 Why Choose ManuDocs?
               </h2>
               <p className="text-text-secondary text-lg max-w-2xl mx-auto">
-                Built specifically for Indian exporters, with deep understanding of export documentation requirements
+                Built specifically for exporters and importers worldwide, with deep understanding of international trade documentation requirements
               </p>
             </div>
 
@@ -174,7 +174,7 @@ const Index = () => {
               Ready to Transform Your Export Documentation?
             </h2>
             <p className="text-ai-accent-foreground/90 text-lg mb-8 max-w-2xl mx-auto">
-              Join hundreds of Indian exporters who have streamlined their documentation process with ManuDocs
+              Join hundreds of exporters and importers worldwide who have streamlined their documentation process with ManuDocs
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">

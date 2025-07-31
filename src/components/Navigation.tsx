@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, Link } from "react-router-dom";
 import ProfilePanel from "@/components/ProfilePanel";
 import { CategoriesDropdown } from "@/components/CategoriesDropdown";
 import { UploadModal } from "@/components/UploadModal";
@@ -45,12 +45,16 @@ export const Navigation = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <FileText className="w-5 h-5 text-ai-accent-foreground" />
+            <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+              <div className="w-8 h-8 flex items-center justify-center">
+                <img 
+                  src="/lovable-uploads/a4e2c54d-dfd5-4ce6-be53-6fa097c2b2da.png" 
+                  alt="ManuDocs Logo" 
+                  className="w-8 h-8 object-contain"
+                />
               </div>
               <span className="font-bold text-xl text-text-primary">ManuDocs</span>
-            </div>
+            </Link>
           </div>
 
           {/* Desktop Navigation */}

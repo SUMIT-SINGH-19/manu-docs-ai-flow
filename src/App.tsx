@@ -13,6 +13,7 @@ import ProductListing from "./pages/ProductListing";
 import ProductDocuments from "./pages/ProductDocuments";
 import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
+import ProfileSetup from "./pages/ProfileSetup";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <Navigation />
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/profile/setup" element={<ProfileSetup />} />
             <Route path="/categories" element={<CategorySelection />} />
             <Route path="/products/:categoryId" element={<ProductListing />} />
             <Route path="/product/:categoryId/:productId" element={<ProductDocuments />} />

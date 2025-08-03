@@ -11,6 +11,7 @@ import AIExtraction from "./pages/AIExtraction";
 import CategorySelection from "./pages/CategorySelection";
 import ProductListing from "./pages/ProductListing";
 import ProductDocuments from "./pages/ProductDocuments";
+import DocumentationWizard from "./pages/DocumentationWizard";
 import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
 import ProfileSetup from "./pages/ProfileSetup";
@@ -28,6 +29,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/profile/setup" element={<ProfileSetup />} />
+            <Route path="/wizard" element={<DocumentationWizard />} />
             <Route path="/categories" element={<CategorySelection />} />
             <Route path="/products/:categoryId" element={<ProductListing />} />
             <Route path="/product/:categoryId/:productId" element={<ProductDocuments />} />

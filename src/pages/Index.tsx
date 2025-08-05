@@ -88,7 +88,7 @@ const Index = () => {
                 <div className="text-sm text-text-secondary">Accuracy Rate</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary mb-1">5 Min</div>
+                <div className="text-2xl font-bold text-primary mb-1">3 Min</div>
                 <div className="text-sm text-text-secondary">Avg. Processing</div>
               </div>
               <div className="text-center">

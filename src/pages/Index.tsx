@@ -17,7 +17,7 @@ const features = [
   {
     icon: Bot,
     title: "AI-Powered Extraction",
-    description: "Advanced AI automatically extracts data from your invoices and documents with 95%+ accuracy."
+    description: "Advanced AI automatically extracts data from your invoices and documents with 100% accuracy."
   },
   {
     icon: Zap,
@@ -84,7 +84,7 @@ const Index = () => {
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary mb-1">95%+</div>
+                <div className="text-2xl font-bold text-primary mb-1">100%</div>
                 <div className="text-sm text-text-secondary">Accuracy Rate</div>
               </div>
               <div className="text-center">

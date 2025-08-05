@@ -18,11 +18,22 @@ import {
   TrendingUp
 } from "lucide-react";
 
+// Import category images
+import agricultureImg from "@/assets/agriculture.jpg";
+import pharmaceuticalsImg from "@/assets/pharmaceuticals.jpg";
+import textilesImg from "@/assets/textiles.jpg";
+import handicraftsImg from "@/assets/handicrafts.jpg";
+import electronicsImg from "@/assets/electronics.jpg";
+import chemicalsImg from "@/assets/chemicals.jpg";
+import autopartsImg from "@/assets/autoparts.jpg";
+import organicImg from "@/assets/organic.jpg";
+
 interface Category {
   id: string;
   name: string;
   description: string;
   icon: React.ComponentType<any>;
+  image: string;
   productCount: number;
   popularity: 'High' | 'Medium' | 'Low';
   trending?: boolean;
@@ -34,6 +45,7 @@ const categories: Category[] = [
     name: 'Agriculture',
     description: 'Fresh produce, spices, grains, and organic products',
     icon: Wheat,
+    image: agricultureImg,
     productCount: 245,
     popularity: 'High',
     trending: true
@@ -43,6 +55,7 @@ const categories: Category[] = [
     name: 'Pharmaceuticals',
     description: 'Medicines, APIs, medical devices, and healthcare products',
     icon: Pill,
+    image: pharmaceuticalsImg,
     productCount: 156,
     popularity: 'High'
   },
@@ -51,6 +64,7 @@ const categories: Category[] = [
     name: 'Textiles',
     description: 'Fabrics, garments, home textiles, and fashion accessories',
     icon: Shirt,
+    image: textilesImg,
     productCount: 189,
     popularity: 'Medium',
     trending: true
@@ -60,6 +74,7 @@ const categories: Category[] = [
     name: 'Handicrafts',
     description: 'Traditional crafts, jewelry, artwork, and decorative items',
     icon: Hammer,
+    image: handicraftsImg,
     productCount: 78,
     popularity: 'Medium'
   },
@@ -68,6 +83,7 @@ const categories: Category[] = [
     name: 'Electronics',
     description: 'Components, devices, software, and tech equipment',
     icon: Cpu,
+    image: electronicsImg,
     productCount: 234,
     popularity: 'High'
   },
@@ -76,6 +92,7 @@ const categories: Category[] = [
     name: 'Chemicals',
     description: 'Industrial chemicals, polymers, and specialty chemicals',
     icon: Beaker,
+    image: chemicalsImg,
     productCount: 167,
     popularity: 'Medium'
   },
@@ -84,6 +101,7 @@ const categories: Category[] = [
     name: 'Auto Parts',
     description: 'Vehicle components, accessories, and automotive supplies',
     icon: Car,
+    image: autopartsImg,
     productCount: 143,
     popularity: 'High'
   },
@@ -92,6 +110,7 @@ const categories: Category[] = [
     name: 'Organic Products',
     description: 'Certified organic foods, cosmetics, and sustainable goods',
     icon: Leaf,
+    image: organicImg,
     productCount: 89,
     popularity: 'Low',
     trending: true
@@ -168,27 +187,37 @@ const CategorySelection = () => {
               const Icon = category.icon;
               return (
                 <Link key={category.id} to={`/products/${category.id}`}>
-                  <Card className="shadow-soft border-0 hover:shadow-medium transition-all duration-300 group cursor-pointer h-full">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                          <Icon className="w-6 h-6 text-primary" />
-                        </div>
-                        <div className="flex flex-col items-end space-y-1">
-                          {category.trending && (
-                            <Badge variant="outline" className="text-xs px-2 py-0.5">
-                              <TrendingUp className="w-3 h-3 mr-1" />
-                              Trending
-                            </Badge>
-                          )}
-                          <Badge 
-                            variant="secondary" 
-                            className={`text-xs px-2 py-0.5 ${getPopularityColor(category.popularity)}`}
-                          >
-                            {category.popularity}
+                  <Card className="shadow-soft border-0 hover:shadow-medium transition-all duration-300 group cursor-pointer h-full overflow-hidden">
+                    {/* Category Image */}
+                    <div className="relative h-40 overflow-hidden">
+                      <img 
+                        src={category.image} 
+                        alt={category.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+                      <div className="absolute top-3 right-3 flex flex-col items-end space-y-1">
+                        {category.trending && (
+                          <Badge variant="outline" className="text-xs px-2 py-0.5 bg-white/90 text-gray-800">
+                            <TrendingUp className="w-3 h-3 mr-1" />
+                            Trending
                           </Badge>
+                        )}
+                        <Badge 
+                          variant="secondary" 
+                          className={`text-xs px-2 py-0.5 ${getPopularityColor(category.popularity)}`}
+                        >
+                          {category.popularity}
+                        </Badge>
+                      </div>
+                      <div className="absolute bottom-3 left-3">
+                        <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                          <Icon className="w-5 h-5 text-white" />
                         </div>
                       </div>
+                    </div>
+                    
+                    <CardHeader className="pb-3">
                       <CardTitle className="text-lg group-hover:text-primary transition-colors">
                         {category.name}
                       </CardTitle>

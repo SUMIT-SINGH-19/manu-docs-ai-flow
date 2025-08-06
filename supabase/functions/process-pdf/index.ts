@@ -24,9 +24,26 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey)
 
+    // Get user from auth header
+    const authHeader = req.headers.get('Authorization')
+    let userId = null
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7)
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+      if (!authError && user) {
+        userId = user.id
+      }
+    }
+
+    // Extract userId from filePath if not available from auth
+    if (!userId && filePath.includes('/')) {
+      userId = filePath.split('/')[0]
+    }
+
     // Download the PDF from storage
     const { data: fileData, error: downloadError } = await supabase.storage
-      .from('pdfs')
+      .from('documents')
       .download(filePath)
 
     if (downloadError) {
@@ -64,11 +81,13 @@ serve(async (req) => {
       const embeddingData = await embeddingResponse.json()
       const embedding = embeddingData.data[0].embedding
 
-      // Store in database (you'll need to create this table)
+      // Store in database with user_id
       const { error: insertError } = await supabase
         .from('document_chunks')
         .insert({
+          user_id: userId,
           file_path: filePath,
+          document_name: filePath.split('/').pop() || 'unknown',
           chunk_index: i,
           content: chunk,
           embedding: embedding

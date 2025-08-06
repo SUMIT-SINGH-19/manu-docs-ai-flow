@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { User } from '@supabase/supabase-js'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,6 +11,23 @@ export default function PDFUpload() {
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [processing, setProcessing] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+
+  useEffect(() => {
+    // Get current user
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+    })
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   const handleUpload = async () => {
     if (!file) {
@@ -21,14 +39,23 @@ export default function PDFUpload() {
       return
     }
 
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "Please sign in to upload documents",
+        variant: "destructive"
+      })
+      return
+    }
+
     setUploading(true)
     
     try {
-      // Upload to Supabase storage
+      // Upload to user-specific folder in Supabase storage
       const fileName = `${Date.now()}-${file.name}`
       const { data, error } = await supabase.storage
-        .from('pdfs')
-        .upload(`uploads/${fileName}`, file, { upsert: true })
+        .from('documents')
+        .upload(`${user.id}/${fileName}`, file, { upsert: true })
 
       if (error) throw error
 
@@ -114,7 +141,7 @@ export default function PDFUpload() {
         
         <Button 
           onClick={handleUpload} 
-          disabled={!file || uploading || processing}
+          disabled={!file || uploading || processing || !user}
           className="w-full"
         >
           {uploading ? (

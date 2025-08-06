@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { toast } from '@/hooks/use-toast'
+import { supabase } from '@/lib/supabase'
 
 interface ChatResponse {
   answer: string
@@ -22,10 +23,14 @@ export const useDocumentChat = () => {
     setIsLoading(true)
     
     try {
+      // Get auth token for user-specific queries
+      const { data: { session } } = await supabase.auth.getSession()
+      
       const response = await fetch('/functions/v1/chat-doc', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
         },
         body: JSON.stringify({ query })
       })

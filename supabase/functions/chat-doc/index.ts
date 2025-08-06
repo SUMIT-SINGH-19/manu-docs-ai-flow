@@ -20,13 +20,28 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
+    // Get user from auth header
+    const authHeader = req.headers.get('Authorization')
+    let userId = null
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7)
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+      if (authError || !user) {
+        throw new Error('Authentication required')
+      }
+      userId = user.id
+    } else {
+      throw new Error('Authentication required')
+    }
+
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
     if (!openaiApiKey) {
       throw new Error('OpenAI API key not found')
     }
 
-    // Get relevant chunks using vector similarity search
-    const relevantChunks = await getMatchingChunks(supabase, openaiApiKey, query)
+    // Get relevant chunks using vector similarity search for this user
+    const relevantChunks = await getMatchingChunks(supabase, openaiApiKey, query, userId)
 
     if (relevantChunks.length === 0) {
       return new Response(

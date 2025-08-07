@@ -4,7 +4,7 @@ import { User } from '@supabase/supabase-js'
 import AuthComponent from '@/components/AuthComponent'
 import PDFUpload from '@/components/PDFUpload'
 import UserDocuments from '@/components/UserDocuments'
-import { useDocumentChat } from '@/hooks/useDocumentChat'
+import { useStreamingChat } from '@/hooks/useStreamingChat'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -23,7 +23,7 @@ export default function DocumentDashboard() {
     sources?: number
   }>>([])
   
-  const { askDocument, isLoading, sources } = useDocumentChat()
+  const { response: streamResponse, sendMessage, loading: isStreaming } = useStreamingChat()
 
   useEffect(() => {
     // Get initial session
@@ -58,13 +58,20 @@ export default function DocumentDashboard() {
     }])
 
     try {
-      const answer = await askDocument(currentQuestion)
-      
-      // Add answer to conversation
+      const messageStack = [
+        ...conversation.map(m => ({
+          role: m.type === 'question' ? 'user' : 'assistant',
+          content: m.content
+        })),
+        { role: 'user', content: currentQuestion }
+      ]
+
+      const answer = await sendMessage(messageStack as any)
+
+      // Add streamed answer to conversation
       setConversation(prev => [...prev, {
         type: 'answer',
-        content: answer,
-        sources
+        content: answer
       }])
     } catch (error) {
       // Error is already handled by the hook
@@ -148,13 +155,17 @@ export default function DocumentDashboard() {
                   ))
                 )}
                 
-                {isLoading && (
+                {isStreaming && (
                   <div className="flex justify-start">
                     <div className="bg-muted rounded-lg p-3 mr-4">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Analyzing your documents...
-                      </div>
+                      {streamResponse ? (
+                        <p className="text-sm whitespace-pre-wrap">{streamResponse}</p>
+                      ) : (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Analyzing your documents...
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -168,12 +179,12 @@ export default function DocumentDashboard() {
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                   placeholder="Ask a question about your uploaded documents..."
-                  disabled={isLoading}
+                  disabled={isStreaming}
                   className="flex-1"
                 />
                 <Button 
                   type="submit" 
-                  disabled={isLoading || !question.trim()}
+                  disabled={isStreaming || !question.trim()}
                   size="icon"
                 >
                   <Send className="h-4 w-4" />

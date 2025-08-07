@@ -6,12 +6,14 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Upload, FileText, Loader2 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 export default function PDFUpload() {
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [processing, setProcessing] = useState(false)
   const [user, setUser] = useState<User | null>(null)
+  const [docType, setDocType] = useState<string>('')
 
   useEffect(() => {
     // Get current user
@@ -54,7 +56,7 @@ export default function PDFUpload() {
       // Upload to user-specific folder in Supabase storage
       const fileName = `${Date.now()}-${file.name}`
       const { data, error } = await supabase.storage
-        .from('documents')
+        .from('docs')
         .upload(`${user.id}/${fileName}`, file, { upsert: true })
 
       if (error) throw error
@@ -62,15 +64,19 @@ export default function PDFUpload() {
       setUploading(false)
       setProcessing(true)
 
-      // Process the PDF with edge function
+      // Get auth token
+      const { data: { session } } = await supabase.auth.getSession()
+
+      // Process the PDF with edge function (embeddings + chunking)
       const response = await fetch('/functions/v1/process-pdf', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
         },
         body: JSON.stringify({
-          filePath: data.path
-        })
+          filePath: data.path,
+        }),
       })
 
       if (!response.ok) {
@@ -78,10 +84,26 @@ export default function PDFUpload() {
       }
 
       const result = await response.json()
+
+      // Parse + classify the document
+      const parseRes = await fetch('/functions/v1/parse-doc', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ filePath: data.path, providedDocType: docType || undefined }),
+      })
+
+      let classified = ''
+      if (parseRes.ok) {
+        const parsed = await parseRes.json()
+        classified = parsed?.doc_type || ''
+      }
       
       toast({
-        title: "Success",
-        description: `PDF uploaded and processed successfully! ${result.chunksCount} chunks created.`,
+        title: 'Success',
+        description: `Uploaded, processed (${result.chunksCount} chunks).${classified ? ` Classified as: ${classified}` : ''}`,
       })
 
       setFile(null)
@@ -125,6 +147,22 @@ export default function PDFUpload() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
+          <div className="space-y-1">
+            <label className="text-sm">Document type (optional)</label>
+            <Select value={docType} onValueChange={setDocType}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select type (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="invoice">Invoice</SelectItem>
+                <SelectItem value="bill_of_lading">Bill of Lading</SelectItem>
+                <SelectItem value="packing_list">Packing List</SelectItem>
+                <SelectItem value="iec">IEC</SelectItem>
+                <SelectItem value="shipping_bill">Shipping Bill</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <Input
             id="pdf-input"
             type="file"

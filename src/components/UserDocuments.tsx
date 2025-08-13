@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { FileText, Trash2, Download, Calendar } from 'lucide-react'
+import { FileText, Trash2, Download, Calendar, Eye } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import {
   AlertDialog,
@@ -151,11 +151,27 @@ export default function UserDocuments() {
 
   const downloadDocument = async (filePath: string, documentName: string) => {
     try {
-      const { data, error } = await supabase.storage
-        .from('documents')
+      // Try both bucket names for compatibility
+      let data, error;
+      
+      // First try 'docs' bucket (from PDFUpload component)
+      const docsResult = await supabase.storage
+        .from('docs')
         .download(filePath)
-
-      if (error) throw error
+      
+      if (docsResult.error) {
+        // Fallback to 'documents' bucket
+        const documentsResult = await supabase.storage
+          .from('documents')
+          .download(filePath)
+        
+        if (documentsResult.error) {
+          throw documentsResult.error
+        }
+        data = documentsResult.data
+      } else {
+        data = docsResult.data
+      }
 
       // Create download link
       const url = URL.createObjectURL(data)
@@ -166,11 +182,52 @@ export default function UserDocuments() {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
+      
+      toast({
+        title: "Success",
+        description: `Downloaded ${documentName}`,
+      })
     } catch (error: any) {
       console.error('Error downloading document:', error)
       toast({
         title: "Error",
-        description: "Failed to download document.",
+        description: `Failed to download document: ${error.message}`,
+        variant: "destructive"
+      })
+    }
+  }
+
+  const previewDocument = async (filePath: string, documentName: string) => {
+    try {
+      // Try both bucket names for compatibility
+      let publicUrl;
+      
+      // First try 'docs' bucket
+      const docsUrl = supabase.storage
+        .from('docs')
+        .getPublicUrl(filePath)
+      
+      if (docsUrl.data?.publicUrl) {
+        publicUrl = docsUrl.data.publicUrl
+      } else {
+        // Fallback to 'documents' bucket
+        const documentsUrl = supabase.storage
+          .from('documents')
+          .getPublicUrl(filePath)
+        publicUrl = documentsUrl.data?.publicUrl
+      }
+
+      if (publicUrl) {
+        // Open in new tab for preview
+        window.open(publicUrl, '_blank')
+      } else {
+        throw new Error('Could not generate preview URL')
+      }
+    } catch (error: any) {
+      console.error('Error previewing document:', error)
+      toast({
+        title: "Error",
+        description: `Failed to preview document: ${error.message}`,
         variant: "destructive"
       })
     }
@@ -230,6 +287,15 @@ export default function UserDocuments() {
               <Separator />
               
               <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => previewDocument(doc.file_path, doc.document_name)}
+                >
+                  <Eye className="h-3 w-3 mr-1" />
+                  Preview
+                </Button>
+                
                 <Button
                   variant="outline"
                   size="sm"

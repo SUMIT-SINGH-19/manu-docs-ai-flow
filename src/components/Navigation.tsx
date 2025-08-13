@@ -2,7 +2,6 @@ import { useState } from "react";
 import { NavLink, useLocation, Link } from "react-router-dom";
 import ProfilePanel from "@/components/ProfilePanel";
 import { CategoriesDropdown } from "@/components/CategoriesDropdown";
-import { UploadModal } from "@/components/UploadModal";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -14,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { 
-  Upload, 
   LayoutDashboard, 
   HelpCircle, 
   FileText, 
@@ -29,7 +27,6 @@ import {
 export const Navigation = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const location = useLocation();
 
   const navItems = [
@@ -61,12 +58,15 @@ export const Navigation = () => {
           <div className="hidden md:flex items-center space-x-8">
             <CategoriesDropdown />
             <Button 
-              variant="ghost" 
+              variant="ai" 
+              size="sm"
               className="flex items-center space-x-2"
-              onClick={() => setIsUploadModalOpen(true)}
+              asChild
             >
-              <Upload className="w-4 h-4" />
-              <span>Upload</span>
+              <Link to="/document-summary">
+                <FileText className="w-4 h-4" />
+                <span>AI Summary</span>
+              </Link>
             </Button>
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -150,16 +150,17 @@ export const Navigation = () => {
               <div className="p-3">
                 <CategoriesDropdown />
               </div>
+
               <Button 
-                variant="ghost" 
+                variant="ai" 
                 className="w-full justify-start"
-                onClick={() => {
-                  setIsUploadModalOpen(true);
-                  setIsMobileMenuOpen(false);
-                }}
+                asChild
+                onClick={() => setIsMobileMenuOpen(false)}
               >
-                <Upload className="w-4 h-4 mr-2" />
-                Upload
+                <Link to="/document-summary">
+                  <FileText className="w-4 h-4 mr-2" />
+                  AI Summary
+                </Link>
               </Button>
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -193,8 +194,7 @@ export const Navigation = () => {
       {/* Profile Panel */}
       <ProfilePanel isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
       
-      {/* Upload Modal */}
-      <UploadModal isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} />
+
     </nav>
   );
 };

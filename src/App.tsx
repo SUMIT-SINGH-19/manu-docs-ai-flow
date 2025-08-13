@@ -9,9 +9,11 @@ import Upload from "./pages/Upload";
 import Dashboard from "./pages/Dashboard";
 import AIExtraction from "./pages/AIExtraction";
 import CategorySelection from "./pages/CategorySelection";
-import ProductListing from "./pages/ProductListing";
+import CategoryPage from "./pages/CategoryPage";
 import ProductDocuments from "./pages/ProductDocuments";
 import DocumentationWizard from "./pages/DocumentationWizard";
+import DocumentSummary from "./pages/DocumentSummary";
+import DocumentProcessingTest from "./pages/DocumentProcessingTest";
 import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
 import ProfileSetup from "./pages/ProfileSetup";
@@ -31,8 +33,10 @@ const App = () => (
             <Route path="/profile/setup" element={<ProfileSetup />} />
             <Route path="/wizard" element={<DocumentationWizard />} />
             <Route path="/categories" element={<CategorySelection />} />
-            <Route path="/products/:categoryId" element={<ProductListing />} />
+            <Route path="/products/:categorySlug" element={<CategoryPage />} />
             <Route path="/product/:categoryId/:productId" element={<ProductDocuments />} />
+            <Route path="/document-summary" element={<DocumentSummary />} />
+            <Route path="/test-processing" element={<DocumentProcessingTest />} />
             <Route path="/upload" element={<Upload />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/extraction" element={<AIExtraction />} />

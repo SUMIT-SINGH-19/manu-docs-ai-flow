@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,106 +12,49 @@ import {
   ArrowRight,
   Package,
   Hash,
-  Globe
+  Globe,
+  Bot,
+  Loader2
 } from "lucide-react";
-
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  hsCode: string;
-  popularity: number;
-  trending: boolean;
-  documentsRequired: number;
-  regions: string[];
-  thumbnail?: string;
-}
-
-const productsByCategory: { [key: string]: Product[] } = {
-  agriculture: [
-    {
-      id: 'mangoes',
-      name: 'Fresh Mangoes',
-      description: 'Premium Alphonso and Kesar varieties for international export',
-      hsCode: '0804.50.00',
-      popularity: 95,
-      trending: true,
-      documentsRequired: 8,
-      regions: ['UAE', 'USA', 'EU']
-    },
-    {
-      id: 'basmati-rice',
-      name: 'Basmati Rice',
-      description: 'Aromatic long-grain rice, premium quality grades',
-      hsCode: '1006.30.00',
-      popularity: 92,
-      trending: false,
-      documentsRequired: 6,
-      regions: ['Middle East', 'Europe', 'USA']
-    },
-    {
-      id: 'organic-spices',
-      name: 'Organic Spices',
-      description: 'Certified organic turmeric, cardamom, black pepper',
-      hsCode: '0904.11.00',
-      popularity: 88,
-      trending: true,
-      documentsRequired: 10,
-      regions: ['USA', 'EU', 'Japan']
-    },
-    {
-      id: 'fresh-bananas',
-      name: 'Fresh Bananas',
-      description: 'Cavendish variety, optimal ripeness for export',
-      hsCode: '0803.90.00',
-      popularity: 75,
-      trending: false,
-      documentsRequired: 7,
-      regions: ['Middle East', 'Russia']
-    }
-  ],
-  electronics: [
-    {
-      id: 'resistors',
-      name: 'Electronic Resistors',
-      description: 'Precision resistors for electronic circuits',
-      hsCode: '8533.21.00',
-      popularity: 89,
-      trending: true,
-      documentsRequired: 5,
-      regions: ['USA', 'Germany', 'China']
-    },
-    {
-      id: 'capacitors',
-      name: 'Capacitors',
-      description: 'Electrolytic and ceramic capacitors',
-      hsCode: '8532.24.00',
-      popularity: 86,
-      trending: false,
-      documentsRequired: 5,
-      regions: ['Japan', 'South Korea', 'USA']
-    }
-  ]
-};
-
-const categoryNames: { [key: string]: string } = {
-  agriculture: 'Agriculture',
-  pharmaceuticals: 'Pharmaceuticals',
-  textiles: 'Textiles',
-  handicrafts: 'Handicrafts',
-  electronics: 'Electronics',
-  chemicals: 'Chemicals',
-  autoparts: 'Auto Parts',
-  organic: 'Organic Products'
-};
+import { productsAPI, Product, Category } from "@/lib/productsAPI";
+import { toast } from "sonner";
 
 const ProductListing = () => {
   const { categoryId } = useParams<{ categoryId: string }>();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<'popularity' | 'name' | 'trending'>('popularity');
+  const [products, setProducts] = useState<Product[]>([]);
+  const [category, setCategory] = useState<Category | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const products = productsByCategory[categoryId || ''] || [];
-  const categoryName = categoryNames[categoryId || ''] || 'Products';
+  // Fetch products and category data
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!categoryId) return;
+      
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const [productsData, categoryData] = await Promise.all([
+          productsAPI.getProductsByCategory(categoryId),
+          productsAPI.getCategoryBySlug(categoryId)
+        ]);
+        
+        setProducts(productsData);
+        setCategory(categoryData);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load data';
+        setError(errorMessage);
+        toast.error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [categoryId]);
 
   const filteredProducts = products
     .filter(product =>
@@ -146,42 +89,67 @@ const ProductListing = () => {
     <div className="min-h-screen bg-gradient-surface">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
-          {/* Breadcrumb */}
-          <div className="flex items-center space-x-2 text-sm text-text-secondary mb-6">
-            <Link to="/categories" className="hover:text-primary transition-colors">
-              Categories
-            </Link>
-            <span>/</span>
-            <span className="text-text-primary font-medium">{categoryName}</span>
-          </div>
+          {/* Loading State */}
+          {loading && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <span className="ml-2 text-text-secondary">Loading products...</span>
+            </div>
+          )}
 
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <div className="flex items-center space-x-3 mb-2">
-                <Button variant="ghost" size="sm" asChild className="p-2">
-                  <Link to="/categories">
-                    <ArrowLeft className="w-4 h-4" />
-                  </Link>
-                </Button>
-                <h1 className="text-3xl font-bold text-text-primary">
-                  {categoryName} Products
-                </h1>
+          {/* Error State */}
+          {error && !loading && (
+            <div className="text-center py-12">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Package className="w-6 h-6 text-red-600" />
               </div>
-              <p className="text-text-secondary">
-                Select a product to view documentation requirements and templates
-              </p>
+              <h3 className="text-lg font-medium text-text-primary mb-2">Failed to Load Products</h3>
+              <p className="text-text-secondary mb-4">{error}</p>
+              <Button variant="outline" onClick={() => window.location.reload()}>
+                Try Again
+              </Button>
             </div>
-            
-            <div className="flex items-center space-x-3">
-              <Badge variant="outline">
-                {products.length} products
-              </Badge>
-              <Badge variant="secondary">
-                {products.filter(p => p.trending).length} trending
-              </Badge>
-            </div>
-          </div>
+          )}
+
+          {/* Content - only show when not loading and no error */}
+          {!loading && !error && (
+            <>
+              {/* Breadcrumb */}
+              <div className="flex items-center space-x-2 text-sm text-text-secondary mb-6">
+                <Link to="/categories" className="hover:text-primary transition-colors">
+                  Categories
+                </Link>
+                <span>/</span>
+                <span className="text-text-primary font-medium">{category?.name || 'Products'}</span>
+              </div>
+
+              {/* Header */}
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <div className="flex items-center space-x-3 mb-2">
+                    <Button variant="ghost" size="sm" asChild className="p-2">
+                      <Link to="/categories">
+                        <ArrowLeft className="w-4 h-4" />
+                      </Link>
+                    </Button>
+                    <h1 className="text-3xl font-bold text-text-primary">
+                      {category?.name || 'Products'}
+                    </h1>
+                  </div>
+                  <p className="text-text-secondary">
+                    {category?.description || 'Select a product to view documentation requirements and templates'}
+                  </p>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <Badge variant="outline">
+                    {products.length} products
+                  </Badge>
+                  <Badge variant="secondary">
+                    {products.filter(p => p.trending).length} trending
+                  </Badge>
+                </div>
+              </div>
 
           {/* Search and Filters */}
           <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -308,33 +276,59 @@ const ProductListing = () => {
             </div>
           )}
 
-          {/* Quick Actions */}
+          {/* Document Summary Feature Highlight */}
           <Card className="shadow-medium border-0 bg-gradient-primary mt-12">
             <CardContent className="p-8 text-center">
               <h3 className="text-xl font-bold text-ai-accent-foreground mb-3">
-                Can't find your specific product?
+                🚀 New Feature: AI Document Summary & WhatsApp Delivery
               </h3>
               <p className="text-ai-accent-foreground/90 mb-6 max-w-2xl mx-auto">
-                Use our AI-powered product matcher to find the closest match or get help 
-                determining the right classification and documentation requirements.
+                Upload any document and get AI-generated summaries delivered directly to your WhatsApp. 
+                Perfect for quick document insights, contract reviews, and business analysis.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button 
+                  variant="surface" 
+                  className="bg-white/20 text-ai-accent-foreground border-white/30 hover:bg-white/30"
+                  asChild
+                >
+                  <Link to="/document-summary">
+                    <Bot className="w-4 h-4 mr-2" />
+                    Try Document Summary
+                  </Link>
+                </Button>
                 <Button 
                   variant="surface" 
                   className="bg-white/20 text-ai-accent-foreground border-white/30 hover:bg-white/30"
                 >
                   AI Product Matcher
                 </Button>
-                <Button 
-                  variant="surface" 
-                  className="bg-white/20 text-ai-accent-foreground border-white/30 hover:bg-white/30"
-                  asChild
-                >
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card className="shadow-medium border-0 mt-8">
+            <CardContent className="p-6 text-center">
+              <h3 className="text-lg font-medium text-text-primary mb-3">
+                Can't find your specific product?
+              </h3>
+              <p className="text-text-secondary mb-4 max-w-xl mx-auto">
+                Use our AI-powered product matcher or contact our support team for assistance 
+                with product classification and documentation requirements.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button variant="outline">
+                  AI Product Matcher
+                </Button>
+                <Button variant="outline" asChild>
                   <Link to="/help">Contact Support</Link>
                 </Button>
               </div>
             </CardContent>
           </Card>
+            </>
+          )}
         </div>
       </div>
     </div>

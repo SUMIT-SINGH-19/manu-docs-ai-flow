@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,117 +19,109 @@ import {
   FileText,
   Globe,
   Hash,
-  Zap
+  Zap,
+  Loader2
 } from "lucide-react";
+import { productsAPI, ProductDetails, DocumentRequirement } from "@/lib/productsAPI";
+import { toast } from "sonner";
 
-interface DocumentRequirement {
-  id: string;
-  name: string;
-  description: string;
+interface DocumentWithStatus extends DocumentRequirement {
   status: 'complete' | 'auto-filled' | 'missing' | 'required';
-  canAutoFill: boolean;
-  isRequired: boolean;
-  estimatedTime: string;
 }
-
-const productData: { [key: string]: any } = {
-  'agriculture-mangoes': {
-    name: 'Fresh Mangoes',
-    description: 'Premium Alphonso and Kesar varieties for international export',
-    hsCode: '0804.50.00',
-    category: 'Agriculture',
-    regions: ['UAE', 'USA', 'EU'],
-    documents: [
-      {
-        id: 'phytosanitary',
-        name: 'Phytosanitary Certificate',
-        description: 'Certificate ensuring mangoes are free from pests and diseases',
-        status: 'missing',
-        canAutoFill: false,
-        isRequired: true,
-        estimatedTime: '5-7 days'
-      },
-      {
-        id: 'invoice',
-        name: 'Commercial Invoice',
-        description: 'Detailed invoice with product specifications and pricing',
-        status: 'auto-filled',
-        canAutoFill: true,
-        isRequired: true,
-        estimatedTime: 'Instant'
-      },
-      {
-        id: 'packing-list',
-        name: 'Packing List',
-        description: 'Detailed list of packages, weights, and dimensions',
-        status: 'complete',
-        canAutoFill: true,
-        isRequired: true,
-        estimatedTime: 'Instant'
-      },
-      {
-        id: 'origin-cert',
-        name: 'Certificate of Origin',
-        description: 'Document certifying the country of origin',
-        status: 'auto-filled',
-        canAutoFill: true,
-        isRequired: true,
-        estimatedTime: 'Instant'
-      },
-      {
-        id: 'export-license',
-        name: 'Export License',
-        description: 'Government permit for exporting mangoes',
-        status: 'missing',
-        canAutoFill: false,
-        isRequired: true,
-        estimatedTime: '3-5 days'
-      },
-      {
-        id: 'fumigation-cert',
-        name: 'Fumigation Certificate',
-        description: 'Certificate of fumigation treatment if required',
-        status: 'required',
-        canAutoFill: false,
-        isRequired: false,
-        estimatedTime: '1-2 days'
-      }
-    ]
-  }
-};
 
 const ProductDocuments = () => {
   const { categoryId, productId } = useParams<{ categoryId: string; productId: string }>();
   const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
-  
-  const productKey = `${categoryId}-${productId}`;
-  const product = productData[productKey];
+  const [product, setProduct] = useState<ProductDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!product) {
+  // Fetch product details
+  useEffect(() => {
+    const fetchProductDetails = async () => {
+      if (!categoryId || !productId) return;
+      
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const productData = await productsAPI.getProductDetails(categoryId, productId);
+        setProduct(productData);
+        
+        if (!productData) {
+          setError('Product not found');
+        }
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load product details';
+        setError(errorMessage);
+        toast.error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProductDetails();
+  }, [categoryId, productId]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-surface flex items-center justify-center">
+        <div className="flex items-center space-x-3">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <span className="text-text-secondary">Loading product details...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Error or not found state
+  if (error || !product) {
     return (
       <div className="min-h-screen bg-gradient-surface flex items-center justify-center">
         <Card className="shadow-medium border-0 max-w-md">
           <CardContent className="p-8 text-center">
             <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-text-primary mb-2">Product Not Found</h3>
+            <h3 className="text-lg font-medium text-text-primary mb-2">
+              {error || 'Product Not Found'}
+            </h3>
             <p className="text-text-secondary mb-4">
               The requested product information is not available.
             </p>
-            <Button asChild variant="outline">
-              <Link to="/categories">Back to Categories</Link>
-            </Button>
+            <div className="flex space-x-3 justify-center">
+              <Button asChild variant="outline">
+                <Link to="/categories">Back to Categories</Link>
+              </Button>
+              <Button variant="default" onClick={() => window.location.reload()}>
+                Try Again
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  const completedDocs = product.documents.filter((doc: DocumentRequirement) => 
+  // Mock document status for demo (in real app, this would come from user's document progress)
+  const getDocumentStatus = (doc: DocumentRequirement): 'complete' | 'auto-filled' | 'missing' | 'required' => {
+    // Mock logic - in real app, this would check user's actual document status
+    if (doc.canAutoFill && Math.random() > 0.5) return 'auto-filled';
+    if (Math.random() > 0.7) return 'complete';
+    if (doc.isRequired) return 'missing';
+    return 'required';
+  };
+
+  const documentsWithStatus = product.documents.map(doc => ({
+    ...doc,
+    status: getDocumentStatus(doc)
+  }));
+
+  const completedDocs = documentsWithStatus.filter(doc => 
     doc.status === 'complete' || doc.status === 'auto-filled'
   ).length;
-  const totalDocs = product.documents.length;
-  const requiredDocs = product.documents.filter((doc: DocumentRequirement) => doc.isRequired).length;
-  const missingRequired = product.documents.filter((doc: DocumentRequirement) => 
+  const totalDocs = documentsWithStatus.length;
+  const requiredDocs = documentsWithStatus.filter(doc => doc.isRequired).length;
+  const missingRequired = documentsWithStatus.filter(doc => 
     doc.isRequired && (doc.status === 'missing' || doc.status === 'required')
   ).length;
   
@@ -176,7 +168,7 @@ const ProductDocuments = () => {
             </Link>
             <span>/</span>
             <Link to={`/products/${categoryId}`} className="hover:text-primary transition-colors">
-              {product.category}
+              {product.categoryName}
             </Link>
             <span>/</span>
             <span className="text-text-primary font-medium">{product.name}</span>

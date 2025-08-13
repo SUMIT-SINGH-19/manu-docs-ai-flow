@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,138 +15,111 @@ import {
   Car,
   Leaf,
   ArrowRight,
-  TrendingUp
+  TrendingUp,
+  Loader2,
+  AlertCircle,
+  Package
 } from "lucide-react";
+import { categoriesAPI, Category } from "@/lib/categoriesAPI";
+import { toast } from "sonner";
 
-// Import category images
-import agricultureImg from "@/assets/agriculture.jpg";
-import pharmaceuticalsImg from "@/assets/pharmaceuticals.jpg";
-import textilesImg from "@/assets/textiles.jpg";
-import handicraftsImg from "@/assets/handicrafts.jpg";
-import electronicsImg from "@/assets/electronics.jpg";
-import chemicalsImg from "@/assets/chemicals.jpg";
-import autopartsImg from "@/assets/autoparts.jpg";
-import organicImg from "@/assets/organic.jpg";
-
-interface Category {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ComponentType<any>;
-  image: string;
-  productCount: number;
-  popularity: 'High' | 'Medium' | 'Low';
-  trending?: boolean;
-}
-
-const categories: Category[] = [
-  {
-    id: 'agriculture',
-    name: 'Agriculture',
-    description: 'Fresh produce, spices, grains, and organic products',
-    icon: Wheat,
-    image: agricultureImg,
-    productCount: 245,
-    popularity: 'High',
-    trending: true
-  },
-  {
-    id: 'pharmaceuticals',
-    name: 'Pharmaceuticals',
-    description: 'Medicines, APIs, medical devices, and healthcare products',
-    icon: Pill,
-    image: pharmaceuticalsImg,
-    productCount: 156,
-    popularity: 'High'
-  },
-  {
-    id: 'textiles',
-    name: 'Textiles',
-    description: 'Fabrics, garments, home textiles, and fashion accessories',
-    icon: Shirt,
-    image: textilesImg,
-    productCount: 189,
-    popularity: 'Medium',
-    trending: true
-  },
-  {
-    id: 'handicrafts',
-    name: 'Handicrafts',
-    description: 'Traditional crafts, jewelry, artwork, and decorative items',
-    icon: Hammer,
-    image: handicraftsImg,
-    productCount: 78,
-    popularity: 'Medium'
-  },
-  {
-    id: 'electronics',
-    name: 'Electronics',
-    description: 'Components, devices, software, and tech equipment',
-    icon: Cpu,
-    image: electronicsImg,
-    productCount: 234,
-    popularity: 'High'
-  },
-  {
-    id: 'chemicals',
-    name: 'Chemicals',
-    description: 'Industrial chemicals, polymers, and specialty chemicals',
-    icon: Beaker,
-    image: chemicalsImg,
-    productCount: 167,
-    popularity: 'Medium'
-  },
-  {
-    id: 'autoparts',
-    name: 'Auto Parts',
-    description: 'Vehicle components, accessories, and automotive supplies',
-    icon: Car,
-    image: autopartsImg,
-    productCount: 143,
-    popularity: 'High'
-  },
-  {
-    id: 'organic',
-    name: 'Organic Products',
-    description: 'Certified organic foods, cosmetics, and sustainable goods',
-    icon: Leaf,
-    image: organicImg,
-    productCount: 89,
-    popularity: 'Low',
-    trending: true
-  }
-];
+// Icon mapping for categories
+const iconMap: { [key: string]: React.ComponentType<any> } = {
+  'electronics': Cpu,
+  'books': Package,
+  'software': Cpu,
+  'health': Pill,
+  'home-garden': Leaf,
+  'fashion': Shirt,
+  'sports': Package,
+  'automotive': Car,
+  'agriculture': Wheat,
+  'pharmaceuticals': Pill,
+  'textiles': Shirt,
+  'handicrafts': Hammer,
+  'chemicals': Beaker,
+  'autoparts': Car,
+  'organic': Leaf
+};
 
 const CategorySelection = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState({ totalCategories: 0, totalProducts: 0 });
+
+  // Fetch categories from database
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const [categoriesData, statsData] = await Promise.all([
+          categoriesAPI.getCategories(),
+          categoriesAPI.getStatistics()
+        ]);
+        
+        setCategories(categoriesData);
+        setStats(statsData);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load categories';
+        setError(errorMessage);
+        toast.error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const filteredCategories = categories.filter(category =>
     category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     category.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getPopularityColor = (popularity: string) => {
-    switch (popularity) {
-      case 'High': return 'bg-green-100 text-green-800';
-      case 'Medium': return 'bg-amber-100 text-amber-800';
-      case 'Low': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const getIcon = (categorySlug: string) => {
+    return iconMap[categorySlug] || Package;
   };
 
   return (
     <div className="min-h-screen bg-gradient-surface">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-3xl font-bold text-text-primary mb-4">
-              Select Your Product Category
-            </h1>
-            <p className="text-text-secondary text-lg max-w-2xl mx-auto">
-              Choose your export category to access tailored documentation templates and AI-powered assistance
-            </p>
-          </div>
+          {/* Loading State */}
+          {loading && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <span className="ml-2 text-text-secondary">Loading categories...</span>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && !loading && (
+            <div className="text-center py-12">
+              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-text-primary mb-2">Failed to Load Categories</h3>
+              <p className="text-text-secondary mb-4">{error}</p>
+              <Button variant="outline" onClick={() => window.location.reload()}>
+                Try Again
+              </Button>
+            </div>
+          )}
+
+          {/* Content - only show when not loading and no error */}
+          {!loading && !error && (
+            <>
+              {/* Header */}
+              <div className="text-center mb-12">
+                <h1 className="text-3xl font-bold text-text-primary mb-4">
+                  Select Your Product Category
+                </h1>
+                <p className="text-text-secondary text-lg max-w-2xl mx-auto">
+                  Choose your export category to access tailored documentation templates and AI-powered assistance
+                </p>
+              </div>
 
           {/* Search */}
           <div className="relative max-w-md mx-auto mb-8">
@@ -163,20 +136,20 @@ const CategorySelection = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <Card className="shadow-soft border-0 text-center">
               <CardContent className="p-4">
-                <div className="text-2xl font-bold text-primary mb-1">1,234</div>
+                <div className="text-2xl font-bold text-primary mb-1">{stats.totalProducts}</div>
                 <div className="text-sm text-text-secondary">Total Products</div>
               </CardContent>
             </Card>
             <Card className="shadow-soft border-0 text-center">
               <CardContent className="p-4">
-                <div className="text-2xl font-bold text-primary mb-1">8</div>
+                <div className="text-2xl font-bold text-primary mb-1">{stats.totalCategories}</div>
                 <div className="text-sm text-text-secondary">Categories</div>
               </CardContent>
             </Card>
             <Card className="shadow-soft border-0 text-center">
               <CardContent className="p-4">
-                <div className="text-2xl font-bold text-primary mb-1">50+</div>
-                <div className="text-sm text-text-secondary">Document Types</div>
+                <div className="text-2xl font-bold text-primary mb-1">AI</div>
+                <div className="text-sm text-text-secondary">Powered</div>
               </CardContent>
             </Card>
           </div>
@@ -184,30 +157,36 @@ const CategorySelection = () => {
           {/* Categories Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCategories.map((category) => {
-              const Icon = category.icon;
+              const Icon = getIcon(category.slug);
               return (
-                <Link key={category.id} to={`/products/${category.id}`}>
+                <Link key={category.id} to={`/products/${category.slug}`}>
                   <Card className="shadow-soft border-0 hover:shadow-medium transition-all duration-300 group cursor-pointer h-full overflow-hidden">
                     {/* Category Image */}
-                    <div className="relative h-40 overflow-hidden">
-                      <img 
-                        src={category.image} 
-                        alt={category.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+                    <div className="relative h-40 overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
+                      {category.imageUrl ? (
+                        <img 
+                          src={category.imageUrl} 
+                          alt={category.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Icon className="w-16 h-16 text-primary/60" />
+                        </div>
+                      )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
                       <div className="absolute top-3 right-3 flex flex-col items-end space-y-1">
-                        {category.trending && (
+                        {category.productCount === 0 && (
                           <Badge variant="outline" className="text-xs px-2 py-0.5 bg-white/90 text-gray-800">
                             <TrendingUp className="w-3 h-3 mr-1" />
-                            Trending
+                            AI Summary
                           </Badge>
                         )}
                         <Badge 
                           variant="secondary" 
-                          className={`text-xs px-2 py-0.5 ${getPopularityColor(category.popularity)}`}
+                          className="text-xs px-2 py-0.5 bg-blue-100 text-blue-800"
                         >
-                          {category.popularity}
+                          {category.productCount > 0 ? 'Products' : 'AI Powered'}
                         </Badge>
                       </div>
                       <div className="absolute bottom-3 left-3">
@@ -228,7 +207,10 @@ const CategorySelection = () => {
                     <CardContent>
                       <div className="flex items-center justify-between">
                         <div className="text-sm text-text-secondary">
-                          {category.productCount} products
+                          {category.productCount > 0 
+                            ? `${category.productCount} products` 
+                            : 'AI Document Summary'
+                          }
                         </div>
                         <Button 
                           variant="ghost" 
@@ -286,6 +268,8 @@ const CategorySelection = () => {
               </div>
             </CardContent>
           </Card>
+            </>
+          )}
         </div>
       </div>
     </div>

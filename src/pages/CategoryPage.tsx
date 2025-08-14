@@ -11,11 +11,11 @@ import {
   Bot,
   FileText,
   MessageCircle,
-  Zap
+  Zap,
+  ArrowRight,
+  DollarSign
 } from "lucide-react";
-import { categoriesAPI, Category, Product } from "@/lib/categoriesAPI";
-import { toast } from "sonner";
-import DocumentSummary from "./DocumentSummary";
+import { getCategoryBySlug, getProductsByCategory, Category, Product } from "@/data/staticData";
 
 const CategoryPage = () => {
   const { categorySlug } = useParams<{ categorySlug: string }>();
@@ -25,32 +25,30 @@ const CategoryPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchCategoryData = async () => {
+    const loadCategoryData = () => {
       if (!categorySlug) return;
       
       setLoading(true);
       setError(null);
       
-      try {
-        const categoryInfo = await categoriesAPI.getCategoryInfo(categorySlug);
+      // Simulate loading delay for better UX
+      setTimeout(() => {
+        const categoryData = getCategoryBySlug(categorySlug);
+        const productsData = getProductsByCategory(categorySlug);
         
-        if (!categoryInfo.category) {
+        if (!categoryData) {
           setError('Category not found');
+          setLoading(false);
           return;
         }
         
-        setCategory(categoryInfo.category);
-        setProducts(categoryInfo.products);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load category';
-        setError(errorMessage);
-        toast.error(errorMessage);
-      } finally {
+        setCategory(categoryData);
+        setProducts(productsData);
         setLoading(false);
-      }
+      }, 500);
     };
 
-    fetchCategoryData();
+    loadCategoryData();
   }, [categorySlug]);
 
   // Loading state
@@ -247,42 +245,58 @@ const CategoryPage = () => {
           {/* Products Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product) => (
-              <Card key={product.id} className="shadow-soft border-0 hover:shadow-medium transition-all duration-300 group cursor-pointer h-full">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                      <Package className="w-6 h-6 text-primary" />
-                    </div>
-                    {product.price && (
+              <Link key={product.id} to={`/product/${categorySlug}/${product.id}`}>
+                <Card className="shadow-soft border-0 hover:shadow-medium transition-all duration-300 group cursor-pointer h-full">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                        <Package className="w-6 h-6 text-primary" />
+                      </div>
                       <Badge variant="outline" className="text-xs px-2 py-0.5">
-                        ${product.price}
+                        Export Ready
                       </Badge>
-                    )}
-                  </div>
-                  
-                  <CardTitle className="text-lg group-hover:text-primary transition-colors leading-tight">
-                    {product.name}
-                  </CardTitle>
-                  <CardDescription className="text-sm leading-relaxed">
-                    {product.shortDescription || product.description}
-                  </CardDescription>
-                </CardHeader>
-                
-                <CardContent>
-                  <div className="flex items-center justify-between pt-2 border-t border-border">
-                    <div className="text-sm text-text-secondary">
-                      {category.name}
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      className="group-hover:translate-x-1 transition-transform p-2"
-                    >
-                      <Package className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                    
+                    <CardTitle className="text-lg group-hover:text-primary transition-colors leading-tight">
+                      {product.name}
+                    </CardTitle>
+                    <CardDescription className="text-sm leading-relaxed line-clamp-2">
+                      {product.shortDescription}
+                    </CardDescription>
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-4">
+                    {/* Price */}
+                    <div className="flex items-center space-x-2">
+                      <DollarSign className="w-4 h-4 text-text-secondary" />
+                      <span className="text-lg font-semibold text-primary">${product.price}</span>
+                      <span className="text-sm text-text-secondary">per unit</span>
+                    </div>
+
+                    {/* Category */}
+                    <div className="flex items-center space-x-2">
+                      <Package className="w-4 h-4 text-text-secondary" />
+                      <Badge variant="secondary" className="text-xs">
+                        {category.name}
+                      </Badge>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-between pt-2 border-t border-border">
+                      <div className="text-sm text-text-secondary">
+                        View Details
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="group-hover:translate-x-1 transition-transform p-2"
+                      >
+                        <ArrowRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>

@@ -4,13 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ArrowLeft, 
   CheckCircle, 
   AlertCircle, 
-  Lock, 
-  Unlock,
   Eye,
   Edit3,
   Download,
@@ -18,49 +15,58 @@ import {
   Bot,
   FileText,
   Globe,
-  Hash,
+  DollarSign,
+  Package,
   Zap,
   Loader2
 } from "lucide-react";
-import { productsAPI, ProductDetails, DocumentRequirement } from "@/lib/productsAPI";
-import { toast } from "sonner";
+import { getCategoryBySlug, getProductById, Product, Category } from "@/data/staticData";
 
-interface DocumentWithStatus extends DocumentRequirement {
+// Mock document requirement interface for demo
+interface DocumentRequirement {
+  id: string;
+  name: string;
+  description: string;
+  isRequired: boolean;
+  canAutoFill: boolean;
+  estimatedTime: string;
   status: 'complete' | 'auto-filled' | 'missing' | 'required';
 }
 
 const ProductDocuments = () => {
   const { categoryId, productId } = useParams<{ categoryId: string; productId: string }>();
   const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
-  const [product, setProduct] = useState<ProductDetails | null>(null);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [category, setCategory] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch product details
+  // Load static product data
   useEffect(() => {
-    const fetchProductDetails = async () => {
+    const loadProductData = () => {
       if (!categoryId || !productId) return;
       
       setLoading(true);
       setError(null);
       
-      try {
-        const productData = await productsAPI.getProductDetails(categoryId, productId);
-        setProduct(productData);
+      // Simulate loading delay for better UX
+      setTimeout(() => {
+        const productData = getProductById(productId);
+        const categoryData = getCategoryBySlug(categoryId);
         
         if (!productData) {
           setError('Product not found');
+          setLoading(false);
+          return;
         }
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load product details';
-        setError(errorMessage);
-        toast.error(errorMessage);
-      } finally {
+        
+        setProduct(productData);
+        setCategory(categoryData || null);
         setLoading(false);
-      }
+      }, 500);
     };
 
-    fetchProductDetails();
+    loadProductData();
   }, [categoryId, productId]);
 
   // Loading state
@@ -102,26 +108,61 @@ const ProductDocuments = () => {
     );
   }
 
-  // Mock document status for demo (in real app, this would come from user's document progress)
-  const getDocumentStatus = (doc: DocumentRequirement): 'complete' | 'auto-filled' | 'missing' | 'required' => {
-    // Mock logic - in real app, this would check user's actual document status
-    if (doc.canAutoFill && Math.random() > 0.5) return 'auto-filled';
-    if (Math.random() > 0.7) return 'complete';
-    if (doc.isRequired) return 'missing';
-    return 'required';
-  };
+  // Mock documents for demo - in real app, this would come from database
+  const mockDocuments: DocumentRequirement[] = [
+    {
+      id: '1',
+      name: 'Commercial Invoice',
+      description: 'Detailed invoice showing the transaction between buyer and seller, including product details, quantities, and prices.',
+      isRequired: true,
+      canAutoFill: true,
+      estimatedTime: '10 minutes',
+      status: 'auto-filled'
+    },
+    {
+      id: '2',
+      name: 'Packing List',
+      description: 'Detailed list of all items in the shipment, including weights, dimensions, and packaging details.',
+      isRequired: true,
+      canAutoFill: true,
+      estimatedTime: '15 minutes',
+      status: 'complete'
+    },
+    {
+      id: '3',
+      name: 'Certificate of Origin',
+      description: 'Document certifying the country where the goods were manufactured or produced.',
+      isRequired: true,
+      canAutoFill: false,
+      estimatedTime: '30 minutes',
+      status: 'missing'
+    },
+    {
+      id: '4',
+      name: 'Export License',
+      description: 'Government-issued license permitting the export of specific goods to certain destinations.',
+      isRequired: false,
+      canAutoFill: false,
+      estimatedTime: '2-3 days',
+      status: 'required'
+    },
+    {
+      id: '5',
+      name: 'Quality Certificate',
+      description: 'Certificate confirming that the products meet specified quality standards and regulations.',
+      isRequired: true,
+      canAutoFill: false,
+      estimatedTime: '1-2 days',
+      status: 'missing'
+    }
+  ];
 
-  const documentsWithStatus = product.documents.map(doc => ({
-    ...doc,
-    status: getDocumentStatus(doc)
-  }));
-
-  const completedDocs = documentsWithStatus.filter(doc => 
+  const completedDocs = mockDocuments.filter(doc => 
     doc.status === 'complete' || doc.status === 'auto-filled'
   ).length;
-  const totalDocs = documentsWithStatus.length;
-  const requiredDocs = documentsWithStatus.filter(doc => doc.isRequired).length;
-  const missingRequired = documentsWithStatus.filter(doc => 
+  const totalDocs = mockDocuments.length;
+  const requiredDocs = mockDocuments.filter(doc => doc.isRequired).length;
+  const missingRequired = mockDocuments.filter(doc => 
     doc.isRequired && (doc.status === 'missing' || doc.status === 'required')
   ).length;
   
@@ -132,7 +173,7 @@ const ProductDocuments = () => {
       case 'complete':
         return <CheckCircle className="w-5 h-5 text-green-500" />;
       case 'auto-filled':
-        return <Lock className="w-5 h-5 text-blue-500" />;
+        return <Bot className="w-5 h-5 text-blue-500" />;
       case 'missing':
         return <AlertCircle className="w-5 h-5 text-red-500" />;
       case 'required':
@@ -168,7 +209,7 @@ const ProductDocuments = () => {
             </Link>
             <span>/</span>
             <Link to={`/products/${categoryId}`} className="hover:text-primary transition-colors">
-              {product.categoryName}
+              {category?.name || 'Category'}
             </Link>
             <span>/</span>
             <span className="text-text-primary font-medium">{product.name}</span>
@@ -191,12 +232,13 @@ const ProductDocuments = () => {
 
               <div className="flex items-center space-x-6 text-sm">
                 <div className="flex items-center space-x-2">
-                  <Hash className="w-4 h-4 text-text-secondary" />
-                  <span className="font-mono">{product.hsCode}</span>
+                  <DollarSign className="w-4 h-4 text-text-secondary" />
+                  <span className="font-semibold text-primary">${product.price}</span>
+                  <span className="text-text-secondary">per unit</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Globe className="w-4 h-4 text-text-secondary" />
-                  <span>{product.regions.join(', ')}</span>
+                  <Package className="w-4 h-4 text-text-secondary" />
+                  <span>{category?.name || 'Export Product'}</span>
                 </div>
               </div>
             </div>
@@ -234,7 +276,7 @@ const ProductDocuments = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {product.documents.map((doc: DocumentRequirement) => (
+                    {mockDocuments.map((doc: DocumentRequirement) => (
                       <div 
                         key={doc.id}
                         className={`p-4 rounded-lg border transition-all duration-200 cursor-pointer ${

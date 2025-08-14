@@ -180,81 +180,82 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- =====================================================
--- 6. INSERT SAMPLE CATEGORIES
+-- 6. INSERT ORIGINAL CATEGORIES (FROM HEADER)
 -- =====================================================
 
--- Insert sample categories (these will show Document Summary feature since no products)
-INSERT INTO categories (name, slug, description, is_active, sort_order) VALUES
-('Electronics', 'electronics', 'Electronic devices, gadgets, and technology products', true, 1),
-('Books & Education', 'books', 'Educational materials, textbooks, and reference books', true, 2),
-('Software & Tools', 'software', 'Software applications, development tools, and digital products', true, 3),
-('Health & Wellness', 'health', 'Health products, supplements, and wellness solutions', true, 4),
-('Home & Garden', 'home-garden', 'Home improvement, gardening, and household products', true, 5),
-('Fashion & Apparel', 'fashion', 'Clothing, accessories, and fashion items', true, 6),
-('Sports & Fitness', 'sports', 'Sports equipment, fitness gear, and outdoor activities', true, 7),
-('Automotive', 'automotive', 'Car parts, accessories, and automotive products', true, 8);
+-- Insert the original categories that were in the header navigation
+INSERT INTO categories (name, slug, description, icon_url, image_url, is_active, sort_order) VALUES
+('Agriculture', 'agriculture', 'Agricultural products, farming equipment, seeds, fertilizers, and organic produce for export', '/src/assets/agriculture.jpg', '/src/assets/agriculture.jpg', true, 1),
+('Electronics', 'electronics', 'Electronic devices, components, consumer electronics, and technology products', '/src/assets/electronics.jpg', '/src/assets/electronics.jpg', true, 2),
+('Textiles', 'textiles', 'Textile products, fabrics, garments, home textiles, and fashion accessories', '/src/assets/textiles.jpg', '/src/assets/textiles.jpg', true, 3),
+('Pharmaceuticals', 'pharmaceuticals', 'Pharmaceutical products, medicines, healthcare supplies, and medical equipment', '/src/assets/pharmaceuticals.jpg', '/src/assets/pharmaceuticals.jpg', true, 4),
+('Chemicals', 'chemicals', 'Industrial chemicals, specialty chemicals, petrochemicals, and chemical compounds', '/src/assets/chemicals.jpg', '/src/assets/chemicals.jpg', true, 5),
+('Auto Parts', 'autoparts', 'Automotive parts, components, accessories, and vehicle maintenance products', '/src/assets/autoparts.jpg', '/src/assets/autoparts.jpg', true, 6),
+('Handicrafts', 'handicrafts', 'Traditional handicrafts, artisan products, decorative items, and cultural artifacts', '/src/assets/handicrafts.jpg', '/src/assets/handicrafts.jpg', true, 7),
+('Organic Products', 'organic', 'Organic food products, natural cosmetics, eco-friendly items, and sustainable goods', '/src/assets/organic.jpg', '/src/assets/organic.jpg', true, 8);
 
 -- =====================================================
--- 7. INSERT SAMPLE PRODUCTS (CRITICAL FIX)
+-- 7. INSERT SAMPLE PRODUCTS FOR ORIGINAL CATEGORIES
 -- =====================================================
 
--- Add sample products to prevent empty pages
+-- Add comprehensive sample products for each original category
 INSERT INTO products (category_id, name, slug, description, short_description, price, is_active, sort_order) VALUES
--- Electronics Category
-((SELECT id FROM categories WHERE slug = 'electronics'), 'Wireless Bluetooth Headphones', 'wireless-bluetooth-headphones', 'Premium wireless headphones with active noise cancellation, 30-hour battery life, and crystal-clear audio quality. Perfect for music lovers and professionals.', 'Premium wireless headphones with noise cancellation', 199.99, true, 1),
-((SELECT id FROM categories WHERE slug = 'electronics'), 'Smart Fitness Watch', 'smart-fitness-watch', 'Advanced fitness tracking watch with heart rate monitoring, GPS, sleep tracking, and 7-day battery life. Compatible with iOS and Android.', 'Advanced fitness tracking smartwatch', 299.99, true, 2),
-((SELECT id FROM categories WHERE slug = 'electronics'), '4K Webcam for Streaming', '4k-webcam-streaming', 'Professional 4K webcam with auto-focus, built-in microphone, and low-light correction. Ideal for streaming, video calls, and content creation.', 'Professional 4K streaming webcam', 149.99, true, 3),
-((SELECT id FROM categories WHERE slug = 'electronics'), 'Portable Power Bank 20000mAh', 'portable-power-bank-20000mah', 'High-capacity power bank with fast charging, multiple USB ports, and LED display. Charges smartphones up to 6 times on a single charge.', 'High-capacity portable power bank', 79.99, true, 4),
-((SELECT id FROM categories WHERE slug = 'electronics'), 'Wireless Charging Pad', 'wireless-charging-pad', 'Fast wireless charging pad compatible with all Qi-enabled devices. Sleek design with LED indicator and overcharge protection.', 'Fast wireless charging pad', 39.99, true, 5),
 
--- Books & Education Category
-((SELECT id FROM categories WHERE slug = 'books'), 'Complete Python Programming Guide', 'complete-python-programming-guide', 'Comprehensive guide to Python programming from basics to advanced topics. Includes practical projects, best practices, and real-world applications.', 'Complete Python programming reference', 59.99, true, 1),
-((SELECT id FROM categories WHERE slug = 'books'), 'Digital Marketing Mastery', 'digital-marketing-mastery', 'Master digital marketing strategies including SEO, social media, content marketing, and analytics. Updated with latest trends and tools.', 'Complete digital marketing guide', 49.99, true, 2),
-((SELECT id FROM categories WHERE slug = 'books'), 'Data Science Fundamentals', 'data-science-fundamentals', 'Learn data science from scratch with Python, statistics, machine learning, and data visualization. Includes hands-on projects and datasets.', 'Data science learning guide', 69.99, true, 3),
-((SELECT id FROM categories WHERE slug = 'books'), 'Business Strategy Handbook', 'business-strategy-handbook', 'Essential guide to business strategy, planning, and execution. Covers market analysis, competitive positioning, and growth strategies.', 'Business strategy reference book', 45.99, true, 4),
-((SELECT id FROM categories WHERE slug = 'books'), 'Web Development Complete Course', 'web-development-complete-course', 'Full-stack web development course covering HTML, CSS, JavaScript, React, Node.js, and databases. Build real projects from scratch.', 'Complete web development course', 79.99, true, 5),
+-- Agriculture Category Products
+((SELECT id FROM categories WHERE slug = 'agriculture'), 'Organic Basmati Rice', 'organic-basmati-rice', 'Premium quality organic basmati rice grown without pesticides or chemicals. Long grain, aromatic, and perfect for export. Certified organic and sustainably farmed.', 'Premium organic basmati rice for export', 45.99, true, 1),
+((SELECT id FROM categories WHERE slug = 'agriculture'), 'Fresh Turmeric Powder', 'fresh-turmeric-powder', 'High-quality turmeric powder with high curcumin content. Sourced directly from farms, processed hygienically, and packed for international markets.', 'High-curcumin turmeric powder', 12.99, true, 2),
+((SELECT id FROM categories WHERE slug = 'agriculture'), 'Premium Tea Leaves', 'premium-tea-leaves', 'Hand-picked premium tea leaves from high-altitude gardens. Available in black, green, and white varieties. Perfect for international tea markets.', 'Hand-picked premium tea leaves', 28.99, true, 3),
+((SELECT id FROM categories WHERE slug = 'agriculture'), 'Cashew Nuts Grade A', 'cashew-nuts-grade-a', 'Grade A cashew nuts, carefully processed and sorted. Rich in nutrients, perfect for snacking and culinary use. Export quality with international certifications.', 'Grade A export quality cashew nuts', 89.99, true, 4),
+((SELECT id FROM categories WHERE slug = 'agriculture'), 'Coconut Oil Virgin', 'coconut-oil-virgin', 'Cold-pressed virgin coconut oil with natural aroma and taste. Rich in MCTs, perfect for cooking and cosmetic applications. Export grade quality.', 'Cold-pressed virgin coconut oil', 24.99, true, 5),
 
--- Software & Tools Category
-((SELECT id FROM categories WHERE slug = 'software'), 'Project Management Pro', 'project-management-pro', 'Advanced project management software with team collaboration, time tracking, resource planning, and reporting features. Perfect for teams of all sizes.', 'Professional project management tool', 29.99, true, 1),
-((SELECT id FROM categories WHERE slug = 'software'), 'Design Studio Suite', 'design-studio-suite', 'Complete design software suite including vector graphics, photo editing, and UI/UX design tools. Professional-grade features for designers.', 'Complete design software suite', 99.99, true, 2),
-((SELECT id FROM categories WHERE slug = 'software'), 'Code Editor Plus', 'code-editor-plus', 'Advanced code editor with syntax highlighting, debugging tools, Git integration, and plugin support. Supports 50+ programming languages.', 'Advanced code editor with debugging', 39.99, true, 3),
-((SELECT id FROM categories WHERE slug = 'software'), 'Database Management Tool', 'database-management-tool', 'Powerful database management and administration tool supporting MySQL, PostgreSQL, MongoDB, and more. Visual query builder included.', 'Professional database management tool', 59.99, true, 4),
-((SELECT id FROM categories WHERE slug = 'software'), 'API Testing Platform', 'api-testing-platform', 'Comprehensive API testing and monitoring platform with automated testing, performance monitoring, and team collaboration features.', 'Complete API testing solution', 49.99, true, 5),
+-- Electronics Category Products
+((SELECT id FROM categories WHERE slug = 'electronics'), 'LED Display Modules', 'led-display-modules', 'High-resolution LED display modules for digital signage and advertising. Energy-efficient, long-lasting, and suitable for indoor/outdoor applications.', 'High-resolution LED display modules', 299.99, true, 1),
+((SELECT id FROM categories WHERE slug = 'electronics'), 'PCB Circuit Boards', 'pcb-circuit-boards', 'Custom PCB circuit boards manufactured to international standards. Multi-layer options available, perfect for electronic device manufacturers.', 'Custom PCB circuit boards', 15.99, true, 2),
+((SELECT id FROM categories WHERE slug = 'electronics'), 'Power Adapters Universal', 'power-adapters-universal', 'Universal power adapters with multiple voltage options. CE, FCC certified, suitable for various electronic devices and international markets.', 'Universal power adapters certified', 19.99, true, 3),
+((SELECT id FROM categories WHERE slug = 'electronics'), 'Bluetooth Speakers Portable', 'bluetooth-speakers-portable', 'High-quality portable Bluetooth speakers with excellent sound quality. Waterproof design, long battery life, perfect for consumer markets.', 'Portable waterproof Bluetooth speakers', 79.99, true, 4),
+((SELECT id FROM categories WHERE slug = 'electronics'), 'USB Cables Premium', 'usb-cables-premium', 'Premium USB cables with fast charging and data transfer capabilities. Durable construction, multiple connector types available for bulk orders.', 'Premium fast-charging USB cables', 8.99, true, 5),
 
--- Health & Wellness Category
-((SELECT id FROM categories WHERE slug = 'health'), 'Premium Protein Powder', 'premium-protein-powder', 'High-quality whey protein powder with 25g protein per serving. Available in multiple flavors, perfect for muscle building and recovery.', 'High-quality whey protein powder', 49.99, true, 1),
-((SELECT id FROM categories WHERE slug = 'health'), 'Yoga Mat Pro', 'yoga-mat-pro', 'Professional-grade yoga mat with superior grip, cushioning, and durability. Non-slip surface and eco-friendly materials.', 'Professional non-slip yoga mat', 79.99, true, 2),
-((SELECT id FROM categories WHERE slug = 'health'), 'Multivitamin Complex', 'multivitamin-complex', 'Complete daily multivitamin with essential vitamins and minerals. Supports immune system, energy levels, and overall health.', 'Complete daily multivitamin supplement', 29.99, true, 3),
-((SELECT id FROM categories WHERE slug = 'health'), 'Resistance Bands Set', 'resistance-bands-set', 'Complete resistance bands set with multiple resistance levels, door anchor, and exercise guide. Perfect for home workouts.', 'Complete resistance bands workout set', 34.99, true, 4),
-((SELECT id FROM categories WHERE slug = 'health'), 'Essential Oils Starter Kit', 'essential-oils-starter-kit', 'Premium essential oils starter kit with 10 popular oils, diffuser, and usage guide. Perfect for aromatherapy and relaxation.', 'Premium essential oils starter kit', 89.99, true, 5),
+-- Textiles Category Products
+((SELECT id FROM categories WHERE slug = 'textiles'), 'Cotton Bed Sheets Set', 'cotton-bed-sheets-set', '100% pure cotton bed sheet sets with high thread count. Soft, breathable, and durable. Available in various sizes and colors for international markets.', '100% pure cotton bed sheet sets', 49.99, true, 1),
+((SELECT id FROM categories WHERE slug = 'textiles'), 'Silk Scarves Handwoven', 'silk-scarves-handwoven', 'Handwoven silk scarves with traditional patterns and modern designs. Premium quality silk, perfect for fashion accessories and gift markets.', 'Handwoven silk scarves premium quality', 89.99, true, 2),
+((SELECT id FROM categories WHERE slug = 'textiles'), 'Denim Fabric Premium', 'denim-fabric-premium', 'Premium denim fabric in various weights and washes. High-quality cotton blend, perfect for garment manufacturers and fashion brands.', 'Premium denim fabric for garments', 12.99, true, 3),
+((SELECT id FROM categories WHERE slug = 'textiles'), 'Embroidered Table Runners', 'embroidered-table-runners', 'Beautiful embroidered table runners with traditional motifs. Hand-crafted by skilled artisans, perfect for home décor and hospitality markets.', 'Hand-embroidered table runners', 34.99, true, 4),
+((SELECT id FROM categories WHERE slug = 'textiles'), 'Organic Cotton T-Shirts', 'organic-cotton-t-shirts', 'Organic cotton t-shirts in various sizes and colors. Soft, comfortable, and eco-friendly. Perfect for private label and retail markets.', 'Organic cotton t-shirts eco-friendly', 15.99, true, 5),
 
--- Home & Garden Category
-((SELECT id FROM categories WHERE slug = 'home-garden'), 'Smart Home Security Camera', 'smart-home-security-camera', 'Wireless security camera with 1080p HD video, night vision, motion detection, and smartphone app control. Easy installation.', 'Wireless HD security camera system', 129.99, true, 1),
-((SELECT id FROM categories WHERE slug = 'home-garden'), 'Indoor Plant Growing Kit', 'indoor-plant-growing-kit', 'Complete indoor gardening kit with LED grow lights, planters, seeds, and nutrients. Grow fresh herbs and vegetables year-round.', 'Complete indoor gardening kit', 89.99, true, 2),
-((SELECT id FROM categories WHERE slug = 'home-garden'), 'Smart Thermostat', 'smart-thermostat', 'Energy-efficient smart thermostat with WiFi connectivity, learning algorithms, and smartphone control. Save up to 20% on energy bills.', 'Energy-efficient smart thermostat', 199.99, true, 3),
-((SELECT id FROM categories WHERE slug = 'home-garden'), 'Robotic Vacuum Cleaner', 'robotic-vacuum-cleaner', 'Intelligent robotic vacuum with mapping technology, app control, and automatic charging. Perfect for busy households.', 'Intelligent robotic vacuum cleaner', 299.99, true, 4),
-((SELECT id FROM categories WHERE slug = 'home-garden'), 'Air Purifier HEPA', 'air-purifier-hepa', 'High-efficiency air purifier with HEPA filter, removes 99.97% of airborne particles. Quiet operation and smart sensors.', 'HEPA air purifier with smart sensors', 179.99, true, 5),
+-- Pharmaceuticals Category Products
+((SELECT id FROM categories WHERE slug = 'pharmaceuticals'), 'Ayurvedic Herbal Capsules', 'ayurvedic-herbal-capsules', 'Traditional Ayurvedic herbal capsules made from pure herbs. GMP certified, tested for quality and purity. Perfect for natural health markets.', 'GMP certified Ayurvedic herbal capsules', 29.99, true, 1),
+((SELECT id FROM categories WHERE slug = 'pharmaceuticals'), 'Vitamin D3 Tablets', 'vitamin-d3-tablets', 'High-potency Vitamin D3 tablets manufactured under strict quality controls. WHO-GMP certified facility, suitable for international pharmaceutical markets.', 'High-potency Vitamin D3 tablets', 19.99, true, 2),
+((SELECT id FROM categories WHERE slug = 'pharmaceuticals'), 'Antiseptic Hand Sanitizer', 'antiseptic-hand-sanitizer', 'WHO-formula antiseptic hand sanitizer with 70% alcohol content. Bulk packaging available, perfect for healthcare and institutional markets.', 'WHO-formula antiseptic hand sanitizer', 8.99, true, 3),
+((SELECT id FROM categories WHERE slug = 'pharmaceuticals'), 'Surgical Face Masks', 'surgical-face-masks', '3-ply surgical face masks with high filtration efficiency. CE marked, FDA approved, suitable for medical and healthcare applications.', '3-ply surgical face masks CE marked', 0.25, true, 4),
+((SELECT id FROM categories WHERE slug = 'pharmaceuticals'), 'Paracetamol Tablets', 'paracetamol-tablets', 'High-quality paracetamol tablets manufactured in WHO-GMP certified facility. Various strengths available, perfect for pharmaceutical distributors.', 'WHO-GMP paracetamol tablets', 5.99, true, 5),
 
--- Fashion & Apparel Category
-((SELECT id FROM categories WHERE slug = 'fashion'), 'Premium Leather Wallet', 'premium-leather-wallet', 'Handcrafted genuine leather wallet with RFID blocking, multiple card slots, and coin pocket. Elegant design for everyday use.', 'Handcrafted leather wallet with RFID', 69.99, true, 1),
-((SELECT id FROM categories WHERE slug = 'fashion'), 'Luxury Watch Collection', 'luxury-watch-collection', 'Elegant luxury watch with Swiss movement, sapphire crystal, and water resistance. Available in multiple styles and colors.', 'Elegant luxury watch with Swiss movement', 299.99, true, 2),
-((SELECT id FROM categories WHERE slug = 'fashion'), 'Designer Sunglasses', 'designer-sunglasses', 'Premium designer sunglasses with UV protection, polarized lenses, and durable frames. Perfect blend of style and functionality.', 'Premium designer sunglasses UV protection', 149.99, true, 3),
-((SELECT id FROM categories WHERE slug = 'fashion'), 'Casual Sneakers Premium', 'casual-sneakers-premium', 'Comfortable premium sneakers with breathable materials, cushioned sole, and modern design. Perfect for daily wear and light exercise.', 'Comfortable premium casual sneakers', 119.99, true, 4),
-((SELECT id FROM categories WHERE slug = 'fashion'), 'Business Laptop Bag', 'business-laptop-bag', 'Professional laptop bag with padded compartments, multiple pockets, and water-resistant material. Fits laptops up to 15.6 inches.', 'Professional water-resistant laptop bag', 89.99, true, 5),
+-- Chemicals Category Products
+((SELECT id FROM categories WHERE slug = 'chemicals'), 'Sodium Bicarbonate Food Grade', 'sodium-bicarbonate-food-grade', 'Food grade sodium bicarbonate with high purity levels. Suitable for food processing, pharmaceutical, and industrial applications. Bulk quantities available.', 'Food grade sodium bicarbonate', 299.99, true, 1),
+((SELECT id FROM categories WHERE slug = 'chemicals'), 'Citric Acid Anhydrous', 'citric-acid-anhydrous', 'High purity citric acid anhydrous for food, pharmaceutical, and industrial use. Kosher and Halal certified, perfect for international markets.', 'High purity citric acid anhydrous', 189.99, true, 2),
+((SELECT id FROM categories WHERE slug = 'chemicals'), 'Calcium Carbonate Powder', 'calcium-carbonate-powder', 'Precipitated calcium carbonate powder with various mesh sizes. Suitable for paint, plastic, rubber, and pharmaceutical industries.', 'Precipitated calcium carbonate powder', 149.99, true, 3),
+((SELECT id FROM categories WHERE slug = 'chemicals'), 'Titanium Dioxide Rutile', 'titanium-dioxide-rutile', 'High-grade titanium dioxide rutile for paint, coating, and plastic applications. Excellent opacity and brightness, suitable for premium applications.', 'High-grade titanium dioxide rutile', 899.99, true, 4),
+((SELECT id FROM categories WHERE slug = 'chemicals'), 'Acetic Acid Glacial', 'acetic-acid-glacial', 'Glacial acetic acid with 99.8% purity. Industrial grade for chemical synthesis, textile processing, and pharmaceutical intermediate applications.', 'Glacial acetic acid 99.8% purity', 199.99, true, 5),
 
--- Sports & Fitness Category
-((SELECT id FROM categories WHERE slug = 'sports'), 'Adjustable Dumbbell Set', 'adjustable-dumbbell-set', 'Space-saving adjustable dumbbell set with quick weight changes from 5-50 lbs per dumbbell. Perfect for home gym setups.', 'Adjustable dumbbell set 5-50 lbs', 299.99, true, 1),
-((SELECT id FROM categories WHERE slug = 'sports'), 'Professional Tennis Racket', 'professional-tennis-racket', 'High-performance tennis racket with carbon fiber construction, perfect balance, and comfortable grip. Suitable for intermediate to advanced players.', 'Professional carbon fiber tennis racket', 179.99, true, 2),
-((SELECT id FROM categories WHERE slug = 'sports'), 'Mountain Bike Helmet', 'mountain-bike-helmet', 'Lightweight mountain bike helmet with advanced ventilation, adjustable fit, and MIPS technology for enhanced protection.', 'Lightweight mountain bike helmet MIPS', 89.99, true, 3),
-((SELECT id FROM categories WHERE slug = 'sports'), 'Camping Tent 4-Person', 'camping-tent-4-person', 'Waterproof 4-person camping tent with easy setup, spacious interior, and durable materials. Perfect for family camping trips.', 'Waterproof 4-person camping tent', 199.99, true, 4),
-((SELECT id FROM categories WHERE slug = 'sports'), 'Swimming Goggles Pro', 'swimming-goggles-pro', 'Professional swimming goggles with anti-fog coating, UV protection, and comfortable silicone seals. Perfect for competitive swimming.', 'Professional anti-fog swimming goggles', 39.99, true, 5),
+-- Auto Parts Category Products
+((SELECT id FROM categories WHERE slug = 'autoparts'), 'Brake Pads Premium', 'brake-pads-premium', 'Premium quality brake pads with excellent stopping power and durability. Suitable for various car models, manufactured to international standards.', 'Premium quality brake pads', 45.99, true, 1),
+((SELECT id FROM categories WHERE slug = 'autoparts'), 'Air Filters Engine', 'air-filters-engine', 'High-efficiency engine air filters with superior filtration. Compatible with multiple vehicle models, perfect for aftermarket distribution.', 'High-efficiency engine air filters', 12.99, true, 2),
+((SELECT id FROM categories WHERE slug = 'autoparts'), 'Shock Absorbers Heavy Duty', 'shock-absorbers-heavy-duty', 'Heavy-duty shock absorbers for commercial and passenger vehicles. Excellent ride comfort and handling, suitable for various terrains.', 'Heavy-duty shock absorbers', 89.99, true, 3),
+((SELECT id FROM categories WHERE slug = 'autoparts'), 'LED Headlight Bulbs', 'led-headlight-bulbs', 'High-brightness LED headlight bulbs with long lifespan. Energy-efficient, easy installation, compatible with most vehicle models.', 'High-brightness LED headlight bulbs', 29.99, true, 4),
+((SELECT id FROM categories WHERE slug = 'autoparts'), 'Radiator Cooling System', 'radiator-cooling-system', 'Efficient radiator cooling systems for various vehicle types. Aluminum construction, excellent heat dissipation, OEM quality standards.', 'Efficient radiator cooling systems', 199.99, true, 5),
 
--- Automotive Category
-((SELECT id FROM categories WHERE slug = 'automotive'), 'Car Dash Camera HD', 'car-dash-camera-hd', 'High-definition dash camera with night vision, loop recording, and G-sensor. Provides security and evidence in case of accidents.', 'HD dash camera with night vision', 129.99, true, 1),
-((SELECT id FROM categories WHERE slug = 'automotive'), 'Wireless Car Charger', 'wireless-car-charger', 'Fast wireless car charger with automatic clamping, 360-degree rotation, and dashboard/vent mounting options. Compatible with all Qi devices.', 'Fast wireless car charger mount', 49.99, true, 2),
-((SELECT id FROM categories WHERE slug = 'automotive'), 'Car Emergency Kit', 'car-emergency-kit', 'Complete car emergency kit with jumper cables, tire pressure gauge, emergency blanket, flashlight, and first aid supplies.', 'Complete car emergency safety kit', 79.99, true, 3),
-((SELECT id FROM categories WHERE slug = 'automotive'), 'Bluetooth Car Adapter', 'bluetooth-car-adapter', 'Bluetooth car adapter with hands-free calling, music streaming, and dual USB charging ports. Easy plug-and-play installation.', 'Bluetooth car adapter hands-free', 34.99, true, 4),
-((SELECT id FROM categories WHERE slug = 'automotive'), 'Car Seat Organizer', 'car-seat-organizer', 'Multi-pocket car seat organizer with tablet holder, tissue box, and storage compartments. Keeps your car tidy and organized.', 'Multi-pocket car seat organizer', 29.99, true, 5);
+-- Handicrafts Category Products
+((SELECT id FROM categories WHERE slug = 'handicrafts'), 'Wooden Carved Sculptures', 'wooden-carved-sculptures', 'Handcrafted wooden sculptures by skilled artisans. Traditional and contemporary designs, perfect for home décor and gift markets worldwide.', 'Handcrafted wooden sculptures', 149.99, true, 1),
+((SELECT id FROM categories WHERE slug = 'handicrafts'), 'Brass Decorative Items', 'brass-decorative-items', 'Traditional brass decorative items including vases, figurines, and ornaments. Hand-polished finish, perfect for interior decoration and collectibles.', 'Traditional brass decorative items', 79.99, true, 2),
+((SELECT id FROM categories WHERE slug = 'handicrafts'), 'Handwoven Carpets', 'handwoven-carpets', 'Exquisite handwoven carpets with intricate patterns and vibrant colors. Made from premium wool and silk, perfect for luxury home markets.', 'Exquisite handwoven carpets', 599.99, true, 3),
+((SELECT id FROM categories WHERE slug = 'handicrafts'), 'Ceramic Pottery Set', 'ceramic-pottery-set', 'Beautiful ceramic pottery sets including bowls, plates, and decorative pieces. Hand-painted designs, microwave and dishwasher safe.', 'Beautiful ceramic pottery sets', 89.99, true, 4),
+((SELECT id FROM categories WHERE slug = 'handicrafts'), 'Bamboo Home Accessories', 'bamboo-home-accessories', 'Eco-friendly bamboo home accessories including storage boxes, serving trays, and decorative items. Sustainable and stylish for modern homes.', 'Eco-friendly bamboo home accessories', 34.99, true, 5),
+
+-- Organic Products Category Products
+((SELECT id FROM categories WHERE slug = 'organic'), 'Organic Honey Raw', 'organic-honey-raw', 'Pure raw organic honey harvested from pristine environments. Unprocessed, unfiltered, and rich in natural enzymes. Perfect for health-conscious consumers.', 'Pure raw organic honey unprocessed', 24.99, true, 1),
+((SELECT id FROM categories WHERE slug = 'organic'), 'Organic Coconut Oil', 'organic-coconut-oil', 'Cold-pressed organic coconut oil with natural aroma. Virgin quality, perfect for cooking, skincare, and hair care applications.', 'Cold-pressed organic coconut oil', 19.99, true, 2),
+((SELECT id FROM categories WHERE slug = 'organic'), 'Organic Spice Mix', 'organic-spice-mix', 'Certified organic spice mixes with authentic flavors. No artificial additives, perfect for gourmet cooking and international food markets.', 'Certified organic spice mixes', 15.99, true, 3),
+((SELECT id FROM categories WHERE slug = 'organic'), 'Organic Skincare Set', 'organic-skincare-set', 'Natural organic skincare set with plant-based ingredients. Chemical-free, cruelty-free, perfect for premium beauty and wellness markets.', 'Natural organic skincare set', 89.99, true, 4),
+((SELECT id FROM categories WHERE slug = 'organic'), 'Organic Herbal Tea', 'organic-herbal-tea', 'Premium organic herbal tea blends with medicinal properties. Caffeine-free, naturally flavored, perfect for health and wellness markets.', 'Premium organic herbal tea blends', 18.99, true, 5);
 
 -- =====================================================
 -- 8. VERIFICATION QUERIES

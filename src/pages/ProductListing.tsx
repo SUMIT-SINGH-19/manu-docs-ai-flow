@@ -7,83 +7,59 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Search, 
   ArrowLeft, 
-  Star, 
-  TrendingUp, 
   ArrowRight,
   Package,
-  Hash,
-  Globe,
+  DollarSign,
   Bot,
   Loader2
 } from "lucide-react";
-import { productsAPI, Product, Category } from "@/lib/productsAPI";
-import { toast } from "sonner";
+import { getCategoryBySlug, getProductsByCategory, Product, Category } from "@/data/staticData";
 
 const ProductListing = () => {
   const { categoryId } = useParams<{ categoryId: string }>();
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<'popularity' | 'name' | 'trending'>('popularity');
+  const [sortBy, setSortBy] = useState<'name' | 'price'>('name');
   const [products, setProducts] = useState<Product[]>([]);
   const [category, setCategory] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // Fetch products and category data
+  // Load static data
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = () => {
       if (!categoryId) return;
       
       setLoading(true);
-      setError(null);
       
-      try {
-        const [productsData, categoryData] = await Promise.all([
-          productsAPI.getProductsByCategory(categoryId),
-          productsAPI.getCategoryBySlug(categoryId)
-        ]);
+      // Simulate loading delay for better UX
+      setTimeout(() => {
+        const categoryData = getCategoryBySlug(categoryId);
+        const productsData = getProductsByCategory(categoryId);
         
+        setCategory(categoryData || null);
         setProducts(productsData);
-        setCategory(categoryData);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load data';
-        setError(errorMessage);
-        toast.error(errorMessage);
-      } finally {
         setLoading(false);
-      }
+      }, 500);
     };
 
-    fetchData();
+    loadData();
   }, [categoryId]);
 
   const filteredProducts = products
     .filter(product =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.hsCode.includes(searchTerm)
+      product.shortDescription.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => {
       switch (sortBy) {
-        case 'popularity':
-          return b.popularity - a.popularity;
+        case 'price':
+          return a.price - b.price;
         case 'name':
           return a.name.localeCompare(b.name);
-        case 'trending':
-          return (b.trending ? 1 : 0) - (a.trending ? 1 : 0);
         default:
           return 0;
       }
     });
-
-  const getPopularityStars = (popularity: number) => {
-    const stars = Math.round(popularity / 20); // Convert to 1-5 scale
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        className={`w-4 h-4 ${i < stars ? 'text-amber-400 fill-amber-400' : 'text-gray-300'}`}
-      />
-    ));
-  };
 
   return (
     <div className="min-h-screen bg-gradient-surface">
@@ -97,22 +73,10 @@ const ProductListing = () => {
             </div>
           )}
 
-          {/* Error State */}
-          {error && !loading && (
-            <div className="text-center py-12">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Package className="w-6 h-6 text-red-600" />
-              </div>
-              <h3 className="text-lg font-medium text-text-primary mb-2">Failed to Load Products</h3>
-              <p className="text-text-secondary mb-4">{error}</p>
-              <Button variant="outline" onClick={() => window.location.reload()}>
-                Try Again
-              </Button>
-            </div>
-          )}
 
-          {/* Content - only show when not loading and no error */}
-          {!loading && !error && (
+
+          {/* Content - only show when not loading */}
+          {!loading && (
             <>
               {/* Breadcrumb */}
               <div className="flex items-center space-x-2 text-sm text-text-secondary mb-6">
@@ -146,7 +110,7 @@ const ProductListing = () => {
                     {products.length} products
                   </Badge>
                   <Badge variant="secondary">
-                    {products.filter(p => p.trending).length} trending
+                    Export Ready
                   </Badge>
                 </div>
               </div>
@@ -156,7 +120,7 @@ const ProductListing = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary w-5 h-5" />
               <Input
-                placeholder="Search products, HS codes, descriptions..."
+                placeholder="Search products, descriptions..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -165,25 +129,18 @@ const ProductListing = () => {
             
             <div className="flex space-x-2">
               <Button
-                variant={sortBy === 'popularity' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSortBy('popularity')}
-              >
-                Popular
-              </Button>
-              <Button
-                variant={sortBy === 'trending' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSortBy('trending')}
-              >
-                Trending
-              </Button>
-              <Button
                 variant={sortBy === 'name' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSortBy('name')}
               >
                 A-Z
+              </Button>
+              <Button
+                variant={sortBy === 'price' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSortBy('price')}
+              >
+                Price
               </Button>
             </div>
           </div>
@@ -199,54 +156,40 @@ const ProductListing = () => {
                         <Package className="w-6 h-6 text-primary" />
                       </div>
                       <div className="flex flex-col items-end space-y-1">
-                        {product.trending && (
-                          <Badge variant="outline" className="text-xs px-2 py-0.5">
-                            <TrendingUp className="w-3 h-3 mr-1" />
-                            Trending
-                          </Badge>
-                        )}
-                        <div className="flex items-center space-x-1">
-                          {getPopularityStars(product.popularity)}
-                        </div>
+                        <Badge variant="outline" className="text-xs px-2 py-0.5">
+                          Export Ready
+                        </Badge>
                       </div>
                     </div>
                     
                     <CardTitle className="text-lg group-hover:text-primary transition-colors leading-tight">
                       {product.name}
                     </CardTitle>
-                    <CardDescription className="text-sm leading-relaxed">
-                      {product.description}
+                    <CardDescription className="text-sm leading-relaxed line-clamp-2">
+                      {product.shortDescription}
                     </CardDescription>
                   </CardHeader>
                   
                   <CardContent className="space-y-4">
-                    {/* HS Code */}
+                    {/* Price */}
                     <div className="flex items-center space-x-2">
-                      <Hash className="w-4 h-4 text-text-secondary" />
-                      <span className="text-sm font-mono text-text-primary">{product.hsCode}</span>
+                      <DollarSign className="w-4 h-4 text-text-secondary" />
+                      <span className="text-lg font-semibold text-primary">${product.price}</span>
+                      <span className="text-sm text-text-secondary">per unit</span>
                     </div>
 
-                    {/* Regions */}
+                    {/* Category */}
                     <div className="flex items-center space-x-2">
-                      <Globe className="w-4 h-4 text-text-secondary" />
-                      <div className="flex flex-wrap gap-1">
-                        {product.regions.slice(0, 2).map((region) => (
-                          <Badge key={region} variant="secondary" className="text-xs">
-                            {region}
-                          </Badge>
-                        ))}
-                        {product.regions.length > 2 && (
-                          <Badge variant="secondary" className="text-xs">
-                            +{product.regions.length - 2}
-                          </Badge>
-                        )}
-                      </div>
+                      <Package className="w-4 h-4 text-text-secondary" />
+                      <Badge variant="secondary" className="text-xs">
+                        {category?.name}
+                      </Badge>
                     </div>
 
                     {/* Footer */}
                     <div className="flex items-center justify-between pt-2 border-t border-border">
                       <div className="text-sm text-text-secondary">
-                        {product.documentsRequired} documents
+                        View Details
                       </div>
                       <Button 
                         variant="ghost" 

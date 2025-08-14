@@ -17,11 +17,9 @@ import {
   ArrowRight,
   TrendingUp,
   Loader2,
-  AlertCircle,
   Package
 } from "lucide-react";
-import { categoriesAPI, Category } from "@/lib/categoriesAPI";
-import { toast } from "sonner";
+import { getAllCategories, getAllProducts, Category } from "@/data/staticData";
 
 // Icon mapping for categories
 const iconMap: { [key: string]: React.ComponentType<any> } = {
@@ -46,33 +44,29 @@ const CategorySelection = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
   const [stats, setStats] = useState({ totalCategories: 0, totalProducts: 0 });
 
-  // Fetch categories from database
+  // Load static data
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = () => {
       setLoading(true);
-      setError(null);
       
-      try {
-        const [categoriesData, statsData] = await Promise.all([
-          categoriesAPI.getCategories(),
-          categoriesAPI.getStatistics()
-        ]);
+      // Simulate loading delay for better UX
+      setTimeout(() => {
+        const categoriesData = getAllCategories();
+        const productsData = getAllProducts();
         
         setCategories(categoriesData);
-        setStats(statsData);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load categories';
-        setError(errorMessage);
-        toast.error(errorMessage);
-      } finally {
+        setStats({
+          totalCategories: categoriesData.length,
+          totalProducts: productsData.length
+        });
         setLoading(false);
-      }
+      }, 500);
     };
 
-    fetchData();
+    loadData();
   }, []);
 
   const filteredCategories = categories.filter(category =>
@@ -96,20 +90,8 @@ const CategorySelection = () => {
             </div>
           )}
 
-          {/* Error State */}
-          {error && !loading && (
-            <div className="text-center py-12">
-              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-text-primary mb-2">Failed to Load Categories</h3>
-              <p className="text-text-secondary mb-4">{error}</p>
-              <Button variant="outline" onClick={() => window.location.reload()}>
-                Try Again
-              </Button>
-            </div>
-          )}
-
-          {/* Content - only show when not loading and no error */}
-          {!loading && !error && (
+          {/* Content - only show when not loading */}
+          {!loading && (
             <>
               {/* Header */}
               <div className="text-center mb-12">

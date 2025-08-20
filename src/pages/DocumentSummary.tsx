@@ -345,8 +345,7 @@ const DocumentSummary = () => {
                           )}
 
                           {/* Summary Preview */}
-                          {uploadedFile.status === "completed" &&
-                            uploadedFile.summary && (
+                          {uploadedFile.status === "completed" && (
                               <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                                 <div className="flex items-center justify-between mb-2">
                                   <h4 className="text-sm font-medium text-green-800">
@@ -369,9 +368,15 @@ const DocumentSummary = () => {
                                     </Button>
                                   </div>
                                 </div>
-                                <p className="text-sm text-green-700 line-clamp-3">
-                                  {uploadedFile.summary}
-                                </p>
+                                {uploadedFile.summary ? (
+                                  <p className="text-sm text-green-700 line-clamp-3">
+                                    {uploadedFile.summary}
+                                  </p>
+                                ) : (
+                                  <p className="text-sm text-green-700 italic">
+                                    Waiting for summary from WhatsApp... this can take 10–15 seconds.
+                                  </p>
+                                )}
                                 <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
                                   <div className="flex items-center space-x-1">
                                     <MessageCircle className="w-3 h-3" />

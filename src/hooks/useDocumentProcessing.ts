@@ -139,41 +139,46 @@ export const useDocumentProcessing = () => {
       })));
 
       // Process documents via N8N webhook with phone number for WhatsApp delivery
-      const result = await documentSummaryService.processDocuments(newFiles, {
+      const processingPromise = documentSummaryService.processDocuments(newFiles, {
         ...options,
-        sendToWhatsApp: true, // Always send to WhatsApp via N8N
-        phoneNumber: options?.phoneNumber || '+919491392074' // Use provided phone number or default
+        sendToWhatsApp: true,
+        phoneNumber: options?.phoneNumber || '+919491392074'
       });
-      
-      setLastResult(result);
 
-      if (result.success) {
-        // Update files with results
-        setFiles(prev => prev.map(file => {
-          const processedDoc = result.documents.find(doc => doc.filename === file.file.name);
-          if (processedDoc) {
-            return {
-              ...file,
-              status: 'completed',
-              progress: 100,
-              summary: processedDoc.summary,
-              wordCount: processedDoc.wordCount,
-              processingTime: processedDoc.processingTime
-            };
-          }
-          return file;
-        }));
+      // Immediately show success and let summary arrive asynchronously
+      setFiles(prev => prev.map(file => ({
+        ...file,
+        status: 'completed',
+        progress: 100
+      })));
+      toast.success('Upload received. Check in your WhatsApp. Summary will appear below shortly.');
 
-        toast.success(`Successfully processed ${result.documents.length} document(s)! Check in your WhatsApp.`);
-      } else {
-        // Force success UI even if N8N reports failure
-        setFiles(prev => prev.map(file => ({
-          ...file,
-          status: 'completed',
-          progress: 100
-        })));
-        toast.success('Upload received. Check in your WhatsApp.');
-      }
+      // When n8n responds, update summaries inline
+      processingPromise.then((result) => {
+        setLastResult(result);
+        if (result && result.success && result.documents?.length) {
+          setFiles(prev => prev.map(file => {
+            const processedDoc = result.documents.find(doc => doc.filename === file.file.name);
+            if (processedDoc) {
+              return {
+                ...file,
+                status: 'completed',
+                progress: 100,
+                summary: processedDoc.summary,
+                wordCount: processedDoc.wordCount,
+                processingTime: processedDoc.processingTime
+              };
+            }
+            return file;
+          }));
+          toast.success('Summary received. Displayed below.');
+        }
+      }).catch(() => {
+        // Keep UI as success even if background processing errors
+      }).finally(() => {
+        setIsProcessing(false);
+        setCurrentProgress(null);
+      });
     } catch (error) {
       // Force success UI on any error as requested
       setFiles(prev => prev.map(file => ({

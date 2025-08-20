@@ -1,6 +1,15 @@
-import { documentProcessor, type ProcessedDocument } from './documentProcessor';
-import { twilioWhatsAppService, type WhatsAppDeliveryResult } from './twilioWhatsAppService';
+import { n8nWebhookService, type N8NDocumentResponse } from './n8nWebhookService';
 import { supabase } from './supabase';
+
+// Updated ProcessedDocument interface to match n8n response
+export interface ProcessedDocument {
+  id: string;
+  filename: string;
+  fileType: string;
+  summary: string;
+  wordCount: number;
+  processingTime: number;
+}
 
 export interface DocumentSummaryOptions {
   maxLength?: number;
@@ -20,7 +29,11 @@ export interface ProcessingProgress {
 
 export interface DocumentSummaryResult {
   documents: ProcessedDocument[];
-  whatsappDelivery?: WhatsAppDeliveryResult[];
+  whatsappDelivery?: {
+    success: boolean;
+    messageId?: string;
+    error?: string;
+  };
   totalProcessingTime: number;
   success: boolean;
   error?: string;
@@ -46,7 +59,7 @@ export class DocumentSummaryService {
   }
 
   /**
-   * Process documents and optionally send to WhatsApp
+   * Process documents via N8N webhook and optionally send to WhatsApp
    */
   async processDocuments(
     files: File[], 
@@ -73,103 +86,97 @@ export class DocumentSummaryService {
 
       await this.validateFiles(files);
 
-      // Stage 2: Extract text from files
+      // Stage 2: Send to N8N webhook for processing
       this.updateProgress({
         stage: 'extracting',
         progress: 30,
-        message: 'Extracting text from documents...'
+        message: 'Sending documents to N8N for processing...'
       });
 
-      const documents: ProcessedDocument[] = [];
-      
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        
-        this.updateProgress({
-          stage: 'extracting',
-          progress: 30 + (i / files.length) * 30,
-          message: `Extracting text from ${file.name}...`,
-          currentFile: file.name
-        });
-
-        try {
-          const processed = await documentProcessor.processDocument(file, {
-            maxLength: options.maxLength,
-            language: options.language,
-            style: options.style
-          });
-          documents.push(processed);
-        } catch (error) {
-          console.error(`Failed to process ${file.name}:`, error);
-          // Add error document to results
-          documents.push({
-            id: crypto.randomUUID(),
-            filename: file.name,
-            fileType: file.type,
-            extractedText: '',
-            summary: `❌ Error processing document: ${error.message}`,
-            wordCount: 0,
-            processingTime: 0
-          });
+      // Prepare request for N8N webhook
+      const n8nRequest = {
+        files,
+        phoneNumber: options.sendToWhatsApp ? options.phoneNumber : undefined,
+        options: {
+          language: options.language || 'en',
+          style: options.style || 'detailed',
+          maxLength: options.maxLength
         }
-      }
+      };
 
-      // Stage 3: Save to database
+      // Stage 3: Processing via N8N
       this.updateProgress({
         stage: 'summarizing',
-        progress: 70,
-        message: 'Saving summaries to database...'
+        progress: 50,
+        message: 'N8N is processing document and generating AI summary... (this may take up to 1 minute)'
+      });
+
+      // Send to N8N webhook (this will take about 1 minute)
+      const n8nResponse = await n8nWebhookService.processDocuments(n8nRequest);
+
+      if (!n8nResponse.success) {
+        throw new Error(n8nResponse.error || 'N8N processing failed');
+      }
+
+      // Stage 4: Processing WhatsApp delivery (handled by N8N)
+      if (options.sendToWhatsApp && options.phoneNumber) {
+        this.updateProgress({
+          stage: 'sending',
+          progress: 80,
+          message: 'N8N is formatting and sending summary to WhatsApp...'
+        });
+      }
+
+      // Stage 5: Convert N8N response to our format
+      const documents: ProcessedDocument[] = n8nResponse.documents?.map(doc => ({
+        id: doc.id,
+        filename: doc.filename,
+        fileType: files.find(f => f.name === doc.filename)?.type || 'application/octet-stream',
+        summary: doc.summary,
+        wordCount: doc.wordCount,
+        processingTime: doc.processingTime
+      })) || [];
+
+      // Stage 6: Save to database (optional - for local tracking)
+      this.updateProgress({
+        stage: 'summarizing',
+        progress: 90,
+        message: 'Saving processing results...'
       });
 
       await this.saveToDatabase(documents);
 
-      // Stage 4: Send to WhatsApp (if requested)
-      let whatsappDelivery: WhatsAppDeliveryResult[] | undefined;
-      
-      if (options.sendToWhatsApp && options.phoneNumber && twilioWhatsAppService) {
-        this.updateProgress({
-          stage: 'sending',
-          progress: 85,
-          message: 'Sending summaries to WhatsApp...'
-        });
-
-        whatsappDelivery = await twilioWhatsAppService.sendMultipleSummaries(
-          options.phoneNumber,
-          documents
-        );
-      }
-
-      // Stage 5: Complete
+      // Stage 7: Complete
       this.updateProgress({
         stage: 'complete',
         progress: 100,
-        message: 'Processing complete!'
+        message: 'Processing complete! Check in your WhatsApp.'
       });
 
       const totalProcessingTime = Date.now() - startTime;
 
       return {
         documents,
-        whatsappDelivery,
+        whatsappDelivery: n8nResponse.whatsappDelivery,
         totalProcessingTime,
         success: true
       };
 
     } catch (error) {
-      console.error('Document processing failed:', error);
+      console.error('N8N document processing failed:', error);
       
       this.updateProgress({
         stage: 'error',
         progress: 0,
         message: 'Processing failed',
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
 
       return {
         documents: [],
         totalProcessingTime: Date.now() - startTime,
         success: false,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }
@@ -299,33 +306,33 @@ export class DocumentSummaryService {
   }
 
   /**
-   * Test WhatsApp connection
+   * Test N8N webhook connection
    */
   async testWhatsAppConnection(): Promise<{ success: boolean; error?: string }> {
-    if (!twilioWhatsAppService) {
-      return {
-        success: false,
-        error: 'Twilio WhatsApp service not configured. Please set VITE_TWILIO_ACCOUNT_SID, VITE_TWILIO_AUTH_TOKEN, and VITE_TWILIO_WHATSAPP_NUMBER'
-      };
-    }
-
-    return await twilioWhatsAppService.checkStatus();
+    return await n8nWebhookService.testConnection();
   }
 
   /**
-   * Send test message to WhatsApp
+   * Send test message via N8N webhook
    */
-  async sendTestMessage(phoneNumber: string): Promise<WhatsAppDeliveryResult> {
-    if (!twilioWhatsAppService) {
+  async sendTestMessage(phoneNumber: string): Promise<{ success: boolean; error?: string; phoneNumber: string; timestamp: number }> {
+    try {
+      const result = await n8nWebhookService.sendTestDocument(phoneNumber);
+      
+      return {
+        success: result.success,
+        error: result.error,
+        phoneNumber,
+        timestamp: Date.now()
+      };
+    } catch (error) {
       return {
         success: false,
-        error: 'Twilio WhatsApp service not configured',
+        error: error instanceof Error ? error.message : 'Test message failed',
         phoneNumber,
         timestamp: Date.now()
       };
     }
-
-    return await twilioWhatsAppService.sendTestMessage(phoneNumber);
   }
 }
 

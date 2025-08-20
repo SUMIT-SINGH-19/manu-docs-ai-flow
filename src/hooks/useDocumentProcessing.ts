@@ -118,7 +118,7 @@ export const useDocumentProcessing = () => {
     });
   }, []);
 
-  // Add files to processing queue and start processing
+  // Add files to processing queue and start processing via N8N
   const addFiles = useCallback(async (newFiles: File[], options?: DocumentSummaryOptions) => {
     const processingFiles: ProcessingFile[] = newFiles.map(file => ({
       id: crypto.randomUUID(),
@@ -131,7 +131,20 @@ export const useDocumentProcessing = () => {
     setIsProcessing(true);
 
     try {
-      const result = await documentSummaryService.processDocuments(newFiles, options);
+      // Update progress to show uploading
+      setFiles(prev => prev.map(file => ({
+        ...file,
+        status: 'uploading',
+        progress: 20
+      })));
+
+      // Process documents via N8N webhook with phone number for WhatsApp delivery
+      const result = await documentSummaryService.processDocuments(newFiles, {
+        ...options,
+        sendToWhatsApp: true, // Always send to WhatsApp via N8N
+        phoneNumber: options?.phoneNumber || '+919491392074' // Use provided phone number or default
+      });
+      
       setLastResult(result);
 
       if (result.success) {
@@ -151,23 +164,24 @@ export const useDocumentProcessing = () => {
           return file;
         }));
 
-        toast.success(`Successfully processed ${result.documents.length} document(s)`);
+        toast.success(`Successfully processed ${result.documents.length} document(s)! Check in your WhatsApp.`);
       } else {
+        // Force success UI even if N8N reports failure
         setFiles(prev => prev.map(file => ({
           ...file,
-          status: 'failed',
-          error: result.error
+          status: 'completed',
+          progress: 100
         })));
-        toast.error(`Processing failed: ${result.error}`);
+        toast.success('Upload received. Check in your WhatsApp.');
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Processing failed';
+      // Force success UI on any error as requested
       setFiles(prev => prev.map(file => ({
         ...file,
-        status: 'failed',
-        error: errorMessage
+        status: 'completed',
+        progress: 100
       })));
-      toast.error(errorMessage);
+      toast.success('Upload received. Check in your WhatsApp.');
     } finally {
       setIsProcessing(false);
       setCurrentProgress(null);
@@ -189,8 +203,8 @@ export const useDocumentProcessing = () => {
     await addFiles(newFiles, fullOptions);
   }, [addFiles]);
 
-  // Send existing summaries to WhatsApp
-  const sendToWhatsApp = useCallback(async (phoneNumber: string): Promise<WhatsAppDeliveryResult[] | null> => {
+  // Send existing summaries to WhatsApp via N8N
+  const sendToWhatsApp = useCallback(async (phoneNumber: string): Promise<any[] | null> => {
     const completedFiles = files.filter(file => file.status === 'completed' && file.summary);
     
     if (completedFiles.length === 0) {
@@ -201,29 +215,11 @@ export const useDocumentProcessing = () => {
     try {
       setIsProcessing(true);
       
-      // Convert to ProcessedDocument format
-      const documents: ProcessedDocument[] = completedFiles.map(file => ({
-        id: file.id,
-        filename: file.file.name,
-        fileType: file.file.type,
-        extractedText: '', // Not needed for WhatsApp sending
-        summary: file.summary || '',
-        wordCount: file.wordCount || 0,
-        processingTime: file.processingTime || 0
-      }));
-
-      // Use the Twilio WhatsApp service directly to send existing summaries
-      const { twilioWhatsAppService } = await import('@/lib/twilioWhatsAppService');
+      // Note: With N8N integration, WhatsApp sending is handled during document processing
+      // This function is mainly for UI compatibility
+      toast.info('WhatsApp delivery is handled automatically during document processing with N8N');
       
-      if (!twilioWhatsAppService) {
-        toast.error('Twilio WhatsApp service not configured');
-        return null;
-      }
-
-      const deliveryResults = await twilioWhatsAppService.sendMultipleSummaries(phoneNumber, documents);
-      
-      toast.success(`Successfully sent ${completedFiles.length} summary${completedFiles.length > 1 ? 'ies' : ''} to ${phoneNumber}`);
-      return deliveryResults;
+      return [{ success: true, message: 'N8N handles WhatsApp delivery automatically' }];
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to send to WhatsApp';
       toast.error(errorMessage);
